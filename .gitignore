@@ -45,3 +45,9 @@ htmlcov/
 
 # Jupyter
 .ipynb_checkpoints/
+
+## AI Tools & Local Assistants
+.claude/
+.anthropic/
+.google/
+.openai/
