@@ -1,0 +1,61 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite both the software and the referenced academic work."
+title: "LS Portfolio Lab"
+version: 1.0.0
+date-released: "2026-02-12"
+type: software
+abstract: >-
+  A long/short equity portfolio risk management and analytics workbench.
+  Implements drawdown analytics from Bailey & Lopez de Prado (2014),
+  factor models based on Fama & French (1993) and Carhart (1997),
+  composite quality scoring, P&L attribution, and multi-provider data
+  architecture (Yahoo Finance, Bloomberg, Interactive Brokers).
+license: MIT
+references:
+  - type: article
+    title: "The Strategy Approval Decision: A Sharpe Ratio Indifference Curve Approach"
+    authors:
+      - family-names: Bailey
+        given-names: David H.
+      - family-names: Lopez de Prado
+        given-names: Marcos
+    journal: "Algorithmic Finance"
+    volume: 3
+    issue: 1-2
+    pages: "99-109"
+    year: 2014
+    doi: "10.3233/AF-140035"
+    abstract: >-
+      Derives closed-form expressions relating portfolio drawdown characteristics
+      to the Sharpe ratio, including expected drawdown, probability of drawdown,
+      expected recovery time, and fraction of time spent in drawdown.
+  - type: article
+    title: "Common Risk Factors in the Returns on Stocks and Bonds"
+    authors:
+      - family-names: Fama
+        given-names: Eugene F.
+      - family-names: French
+        given-names: Kenneth R.
+    journal: "Journal of Financial Economics"
+    volume: 33
+    issue: 1
+    pages: "3-56"
+    year: 1993
+    doi: "10.1016/0304-405X(93)90023-5"
+    abstract: >-
+      Introduces the three-factor model (market, size, value) for explaining
+      cross-sectional variation in stock returns.
+  - type: article
+    title: "On Persistence in Mutual Fund Performance"
+    authors:
+      - family-names: Carhart
+        given-names: Mark M.
+    journal: "The Journal of Finance"
+    volume: 52
+    issue: 1
+    pages: "57-82"
+    year: 1997
+    doi: "10.1111/j.1540-6261.1997.tb03808.x"
+    abstract: >-
+      Extends the Fama-French three-factor model with a momentum factor (UMD),
+      creating the four-factor model used for performance attribution.

@@ -1,0 +1,44 @@
+# LS Portfolio Lab — Default Configuration
+# Users can override these via the Settings panel in the UI
+
+portfolio:
+  max_positions: 80
+  default_nav: 3_000_000_000   # $3B notional
+  min_cash_pct: 0.05           # 5% soft guideline (warning, not a blocker)
+  max_etf_positions: 3         # max ETF hedge positions
+  benchmark: "SPY"
+
+metrics:
+  lookback_days: 252         # 1 year of trading days
+  rsi_period: 14
+  var_confidence: 0.95
+  risk_free_rate: "auto"     # pulls from ^IRX, or set float like 0.05
+  factor_model: "CAPM"       # CAPM | FF3 | FF4
+
+alerts:
+  max_sector_net_exposure: 0.50
+  max_subsector_net_exposure: 0.50
+  max_single_position_weight: 0.10
+  max_net_beta: 0.30
+  min_net_beta: -0.10
+  max_gross_exposure: 2.50
+  max_ann_vol: 0.06              # 6% annualized portfolio vol limit
+
+display:
+  default_return_period: "3M"
+  show_charts:
+    - sector_exposure
+    - correlation_heatmap
+    - nav_curve
+    - beta_scatter
+    - risk_contribution
+  decimal_places: 2
+
+cache:
+  price_staleness_hours: 18   # refetch if older than this
+  info_staleness_days: 7
+  max_history_years: 3
+
+paper_mode:
+  snapshot_frequency: "daily"  # daily | weekly
+  auto_snapshot: true

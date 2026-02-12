@@ -1,0 +1,53 @@
+[project]
+name = "ls-portfolio-lab"
+version = "1.0.0"
+description = "Long/Short Equity Portfolio Risk Workbench"
+requires-python = ">=3.12"
+license = {text = "MIT"}
+dependencies = [
+    "streamlit>=1.40.0",
+    "polars>=1.15.0",
+    "pydantic>=2.10.0",
+    "plotly>=5.24.0",
+    "yfinance>=0.2.46",
+    "numpy>=2.1.0",
+    "scipy>=1.14.0",
+    "pdfplumber>=0.11.0",
+    "openpyxl>=3.1.0",
+    "pyyaml>=6.0",
+    "tenacity>=8.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-cov>=6.0.0",
+    "ruff>=0.8.0",
+]
+bloomberg = [
+    "blpapi",
+]
+ib = [
+    "ib_insync",
+]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["core", "data", "history", "app"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.setuptools.packages.find]
+include = ["core*", "data*", "history*", "app*"]
+
+[build-system]
+requires = ["setuptools>=69.0"]
+build-backend = "setuptools.build_meta"
