@@ -13,7 +13,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-import numpy as np
 import polars as pl
 
 from core.portfolio import Portfolio

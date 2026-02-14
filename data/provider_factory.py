@@ -42,8 +42,14 @@ logger = logging.getLogger(__name__)
 # Each entry: (display_name, module_path, class_name, is_available_func)
 _PROVIDER_REGISTRY: list[tuple[str, str, str, str]] = [
     ("Yahoo Finance", "data.yahoo_provider", "YahooProvider", None),
-    ("Bloomberg", "data.bloomberg_provider", "BloombergProvider", "data.bloomberg_provider.is_available"),
-    ("Interactive Brokers", "data.ib_provider", "IBProvider", "data.ib_provider.is_available"),
+    (
+        "Bloomberg", "data.bloomberg_provider",
+        "BloombergProvider", "data.bloomberg_provider.is_available",
+    ),
+    (
+        "Interactive Brokers", "data.ib_provider",
+        "IBProvider", "data.ib_provider.is_available",
+    ),
 ]
 
 # Cache of instantiated providers (singleton per session)

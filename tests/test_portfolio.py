@@ -6,7 +6,6 @@ import pytest
 
 from core.portfolio import Portfolio, Position, ProposedTrade, TradeBasket
 
-
 # --- Position tests ---
 
 

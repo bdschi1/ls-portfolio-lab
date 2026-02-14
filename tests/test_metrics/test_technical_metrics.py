@@ -7,7 +7,6 @@ import pytest
 from core.metrics.technical_metrics import (
     high_low_52w,
     momentum,
-    multi_period_momentum,
     position_technical_summary,
     price_vs_sma,
     rsi,

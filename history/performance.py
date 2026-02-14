@@ -7,7 +7,6 @@ This is the bridge between raw snapshots and the PM scorecard.
 from __future__ import annotations
 
 import logging
-from datetime import date
 
 import numpy as np
 import polars as pl

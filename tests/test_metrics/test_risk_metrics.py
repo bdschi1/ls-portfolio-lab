@@ -5,7 +5,6 @@ import polars as pl
 import pytest
 
 from core.metrics.risk_metrics import (
-    covariance_matrix,
     cvar_historical,
     days_to_liquidate,
     idiosyncratic_volatility,

@@ -10,7 +10,7 @@ import math
 
 import numpy as np
 import polars as pl
-from scipy.stats import norm, skew, kurtosis
+from scipy.stats import kurtosis, norm, skew
 
 TRADING_DAYS_PER_YEAR = 252
 
@@ -145,7 +145,6 @@ def multi_period_returns(prices: pl.Series) -> dict[str, float]:
     Returns dict: {"1D": float, "1W": float, "1M": float, "3M": float,
                     "6M": float, "1Y": float, "YTD": float}
     """
-    from datetime import date
 
     results: dict[str, float] = {}
     n = prices.len()

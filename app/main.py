@@ -16,8 +16,8 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-from app.pages import paper_portfolio, pm_scorecard, portfolio_view, trade_simulator
-from app.state.session import init_session_state
+from app.pages import paper_portfolio, pm_scorecard, portfolio_view, trade_simulator  # noqa: E402
+from app.state.session import init_session_state  # noqa: E402
 
 # Initialize session state
 init_session_state()
@@ -110,10 +110,10 @@ Built for PMs who need a lightweight, local-first tool to answer:
 ### Pages
 
 **1. Portfolio Dashboard**
-- Upload an Excel/CSV portfolio or generate a mock one (~30L / ~40S across 11 GICS sectors).
-- **Top bar:** Portfolio Vol, Net Beta, Sharpe, weighted RSI (long/short books), Gross/Net exposure, Cash %, Time in Drawdown, position count.
-- **Detail strip:** Summary (NAV, L/S ratio, HHI), Risk (Sortino, VaR, CVaR, tracking error), Drawdown (max DD, current DD, Calmar, expected DD via Bailey & Lopez de Prado), Factors (CAPM alpha/beta, systematic %, factor tilts), Correlation (pairwise, long book, short book, L/S), Sector exposure.
-- **Position table:** Sortable, filterable by side/sector. Columns include per-name annualized vol, beta, RSI.
+- Upload an Excel/CSV portfolio or generate a mock one.
+- **Top bar:** Portfolio Vol, Net Beta, Sharpe, RSI, exposure, Cash %.
+- **Detail strip:** Summary, Risk, Drawdown, Factors, Correlation.
+- **Position table:** Sortable, filterable. Per-name vol, beta, RSI.
 - **Charts:** Sector exposure, correlation heatmap, NAV curve, beta scatter.
 
 **2. Trade Simulator**

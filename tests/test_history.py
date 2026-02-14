@@ -1,13 +1,12 @@
 """Tests for history/ modules — trade log, snapshots, performance."""
 
-import tempfile
-from datetime import date, datetime
+from datetime import date
 from pathlib import Path
 
 import pytest
 
+from history.snapshot import DailySnapshot, SnapshotStore
 from history.trade_log import TradeLog, TradeRecord
-from history.snapshot import DailySnapshot, PositionSnapshot, SnapshotStore
 
 
 class TestTradeLog:

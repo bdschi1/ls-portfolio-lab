@@ -14,11 +14,9 @@ import polars as pl
 
 from core.metrics import (
     correlation_metrics,
-    drawdown_metrics,
     exposure_metrics,
     return_metrics,
     risk_metrics,
-    technical_metrics,
 )
 from core.portfolio import Portfolio, Position, ProposedTrade, TradeBasket
 
@@ -325,14 +323,12 @@ def simulate_impact(
 
         cvar_before = risk_metrics.cvar_historical(port_rets_before)
         cvar_after = risk_metrics.cvar_historical(port_rets_after)
-        diffs.append(_make_diff("CVaR (95%)", cvar_before, cvar_after, "risk", lower_is_better=True))
+        diffs.append(_make_diff(
+            "CVaR (95%)", cvar_before, cvar_after,
+            "risk", lower_is_better=True,
+        ))
 
     # --- Correlation ---
-    long_tickers_before = [p.ticker for p in portfolio.long_positions]
-    short_tickers_before = [p.ticker for p in portfolio.short_positions]
-    long_tickers_after = [p.ticker for p in portfolio_after.long_positions]
-    short_tickers_after = [p.ticker for p in portfolio_after.short_positions]
-
     corr_before = correlation_metrics.average_pairwise_correlation(
         returns_df, portfolio.tickers
     )

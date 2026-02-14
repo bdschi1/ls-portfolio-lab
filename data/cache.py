@@ -98,7 +98,8 @@ class DataCache:
         """
         Get daily prices, using cache when fresh enough, fetching otherwise.
 
-        Returns long-format polars DataFrame: date, ticker, open, high, low, close, adj_close, volume
+        Returns long-format polars DataFrame with columns:
+        date, ticker, open, high, low, close, adj_close, volume
         """
         if not tickers:
             return self._empty_price_df()

@@ -277,11 +277,17 @@ def _chart_correlation_heatmap(portfolio: Portfolio, returns_df: pl.DataFrame) -
 
                 st.markdown(f"**Most Correlated to {benchmark}**")
                 rows = [{"Ticker": t, "ρ": f"{c:+.3f}"} for t, c in top3]
-                st.dataframe(pl.DataFrame(rows), use_container_width=True, hide_index=True, height=140)
+                st.dataframe(
+                    pl.DataFrame(rows),
+                    use_container_width=True, hide_index=True, height=140,
+                )
 
                 st.markdown(f"**Least Correlated to {benchmark}**")
                 rows = [{"Ticker": t, "ρ": f"{c:+.3f}"} for t, c in bot3]
-                st.dataframe(pl.DataFrame(rows), use_container_width=True, hide_index=True, height=140)
+                st.dataframe(
+                    pl.DataFrame(rows),
+                    use_container_width=True, hide_index=True, height=140,
+                )
 
 
 def _chart_nav_curve(portfolio: Portfolio, returns_df: pl.DataFrame) -> None:
@@ -293,7 +299,10 @@ def _chart_nav_curve(portfolio: Portfolio, returns_df: pl.DataFrame) -> None:
         return
 
     cum_ret = return_metrics.cumulative_return(port_rets)
-    dates = returns_df["date"].tail(cum_ret.len()) if "date" in returns_df.columns else list(range(cum_ret.len()))
+    if "date" in returns_df.columns:
+        dates = returns_df["date"].tail(cum_ret.len())
+    else:
+        dates = list(range(cum_ret.len()))
 
     fig = go.Figure()
     fig.add_trace(go.Scatter(
@@ -317,7 +326,10 @@ def _chart_drawdown(portfolio: Portfolio, returns_df: pl.DataFrame) -> None:
 
     cum_ret = return_metrics.cumulative_return(port_rets)
     dd = drawdown_metrics.drawdown_series(cum_ret)
-    dates = returns_df["date"].tail(dd.len()) if "date" in returns_df.columns else list(range(dd.len()))
+    if "date" in returns_df.columns:
+        dates = returns_df["date"].tail(dd.len())
+    else:
+        dates = list(range(dd.len()))
 
     fig = go.Figure()
     fig.add_trace(go.Scatter(
@@ -344,9 +356,11 @@ def _chart_rolling_metrics(portfolio: Portfolio, returns_df: pl.DataFrame) -> No
 
     rf = st.session_state.get("risk_free_rate_value", 0.05)
     rolling_sharpe = return_metrics.rolling_sharpe(port_rets, window=63, risk_free_rate=rf)
-    rolling_vol = risk_metrics.rolling_volatility(port_rets, window=63)
 
-    dates = returns_df["date"].tail(rolling_sharpe.len()) if "date" in returns_df.columns else list(range(rolling_sharpe.len()))
+    if "date" in returns_df.columns:
+        dates = returns_df["date"].tail(rolling_sharpe.len())
+    else:
+        dates = list(range(rolling_sharpe.len()))
 
     fig = go.Figure()
     fig.add_trace(go.Scatter(
@@ -405,7 +419,10 @@ def _chart_pnl_waterfall(portfolio: Portfolio) -> None:
     total_pnl = portfolio.total_pnl_dollars
     total_bps = sum(a.contribution_bps for a in attribs)
     fig.update_layout(
-        title=f"P&L Waterfall — Top Winners & Losers (Total: {total_bps:+.0f} bps / ${total_pnl:+,.0f})",
+        title=(
+            f"P&L Waterfall — Top Winners & Losers "
+            f"(Total: {total_bps:+.0f} bps / ${total_pnl:+,.0f})"
+        ),
         yaxis_title="Contribution (bps)",
         height=450,
         showlegend=False,
@@ -502,7 +519,10 @@ def _chart_dispersion(portfolio: Portfolio, returns_df: pl.DataFrame) -> None:
     else:
         rolling_disp = daily_disp
 
-    dates = returns_df["date"].tail(len(rolling_disp)) if "date" in returns_df.columns else list(range(len(rolling_disp)))
+    if "date" in returns_df.columns:
+        dates = returns_df["date"].tail(len(rolling_disp))
+    else:
+        dates = list(range(len(rolling_disp)))
 
     fig = go.Figure()
     fig.add_trace(go.Scatter(

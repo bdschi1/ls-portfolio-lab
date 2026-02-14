@@ -10,7 +10,6 @@ import polars as pl
 import streamlit as st
 
 from app.state.session import get_snapshot_store, get_trade_log, is_paper_mode
-from core.metrics.pm_performance import PMScorecard
 from history.performance import generate_pm_scorecard
 
 
@@ -218,11 +217,20 @@ def render() -> None:
     takeaways = []
 
     if scorecard.slugging_pct >= 2.0 and scorecard.hit_rate >= 0.45:
-        takeaways.append("✅ Strong edge: good hit rate with excellent slugging — asymmetric P&L profile")
+        takeaways.append(
+            "✅ Strong edge: good hit rate with excellent slugging "
+            "— asymmetric P&L profile"
+        )
     elif scorecard.slugging_pct >= 2.0:
-        takeaways.append("✅ Great slugging overcomes modest hit rate — winners are much larger than losers")
+        takeaways.append(
+            "✅ Great slugging overcomes modest hit rate "
+            "— winners are much larger than losers"
+        )
     elif scorecard.hit_rate >= 0.55:
-        takeaways.append("⚠️ High hit rate but needs better slugging — winners should be larger than losers")
+        takeaways.append(
+            "⚠️ High hit rate but needs better slugging "
+            "— winners should be larger than losers"
+        )
 
     if scorecard.long_slugging > scorecard.short_slugging * 1.5:
         takeaways.append("📊 Stronger on the long side — consider reducing short book complexity")
@@ -234,7 +242,10 @@ def render() -> None:
         worst_sector = min(scorecard.sector_stats.items(), key=lambda x: x[1].get("total_pnl", 0))
         takeaways.append(f"🏆 Best sector: {best_sector[0]} (${best_sector[1]['total_pnl']:+,.0f})")
         if worst_sector[1]["total_pnl"] < 0:
-            takeaways.append(f"⚠️ Worst sector: {worst_sector[0]} (${worst_sector[1]['total_pnl']:+,.0f})")
+            wpnl = worst_sector[1]["total_pnl"]
+            takeaways.append(
+                f"⚠️ Worst sector: {worst_sector[0]} (${wpnl:+,.0f})"
+            )
 
     if scorecard.avg_recovery_days > 30:
         takeaways.append("⚠️ Slow drawdown recovery — consider tighter stop-loss discipline")

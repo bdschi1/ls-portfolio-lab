@@ -21,11 +21,11 @@ from typing import Any, Callable, TypeVar
 import polars as pl
 import yfinance as yf
 from tenacity import (
+    before_sleep_log,
     retry,
     retry_if_exception_type,
     stop_after_attempt,
     wait_exponential,
-    before_sleep_log,
 )
 
 from data.provider import DataProvider
@@ -197,7 +197,10 @@ class YahooProvider(DataProvider):
             # Multiple tickers: MultiIndex columns like (Open, AAPL), (Open, MSFT), ...
             for ticker in tickers:
                 try:
-                    ticker_data = raw.xs(ticker, axis=1, level=1) if hasattr(raw.columns, "levels") else raw
+                    if hasattr(raw.columns, "levels"):
+                        ticker_data = raw.xs(ticker, axis=1, level=1)
+                    else:
+                        ticker_data = raw
                     pdf = ticker_data.reset_index()
                     pdf.columns = [c.lower().replace(" ", "_") for c in pdf.columns]
                     df = pl.from_pandas(pdf)
@@ -330,7 +333,8 @@ class YahooProvider(DataProvider):
         else:
             for ticker in tickers:
                 try:
-                    col = raw["Close"][ticker] if hasattr(raw["Close"], "__getitem__") else raw["Close"]
+                    close = raw["Close"]
+                    col = close[ticker] if hasattr(close, "__getitem__") else close
                     last = col.dropna().iloc[-1] if not col.dropna().empty else 0.0
                     prices[ticker] = float(last)
                 except (KeyError, IndexError):

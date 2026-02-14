@@ -6,7 +6,6 @@ beta-weighted exposure, target price, and upside %.
 
 from __future__ import annotations
 
-import numpy as np
 import polars as pl
 import streamlit as st
 

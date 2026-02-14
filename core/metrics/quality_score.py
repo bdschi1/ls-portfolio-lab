@@ -20,7 +20,6 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass, field
 
-import numpy as np
 import polars as pl
 
 from core.metrics import (
@@ -252,7 +251,10 @@ def compute_quality_score(
         name="DD Resilience",
         score=s2,
         weight=w["drawdown_resilience"],
-        detail=f"E[DD] {expected_drawdown_pct(sharpe, ann_vol):.1%}" if sharpe > 0 and ann_vol > 0 else "—",
+        detail=(
+            f"E[DD] {expected_drawdown_pct(sharpe, ann_vol):.1%}"
+            if sharpe > 0 and ann_vol > 0 else "—"
+        ),
     ))
 
     # --- 3. Alpha Generation (DSR) ---

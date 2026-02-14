@@ -252,8 +252,10 @@ def render_top_metrics_bar(
             st.rerun()
 
     st.caption(
-        "Portfolio Vol (annualized) • Net Beta • Sharpe Ratio • Notional-weighted RSI (Long/Short book) "
-        "• Gross/Net Exposure • Cash % • Expected Time in Drawdown • Position Count"
+        "Portfolio Vol (annualized) • Net Beta • Sharpe Ratio "
+        "• Notional-weighted RSI (Long/Short book) "
+        "• Gross/Net Exposure • Cash % "
+        "• Expected Time in Drawdown • Position Count"
     )
 
 
@@ -274,7 +276,11 @@ def _fmt_dollar(val: float) -> str:
 
 def _build_table_rows(label: str, value: str) -> str:
     """Build a single HTML table row."""
-    return f'<tr><td style="padding:3px 8px;color:#888;white-space:nowrap;">{label}</td><td style="padding:3px 8px;font-weight:600;white-space:nowrap;">{value}</td></tr>'
+    return (
+        f'<tr><td style="padding:3px 8px;color:#888;white-space:nowrap;">'
+        f'{label}</td><td style="padding:3px 8px;font-weight:600;'
+        f'white-space:nowrap;">{value}</td></tr>'
+    )
 
 
 def render_metrics_detail(
@@ -318,8 +324,10 @@ def render_metrics_detail(
         if portfolio.short_notional > 0 else "∞"
     )
     summary_rows.append(_build_table_rows("L/S Ratio", ls_ratio))
-    summary_rows.append(_build_table_rows("HHI", f"{exposure_metrics.concentration_hhi(portfolio):.4f}"))
-    summary_rows.append(_build_table_rows("Top 5", f"{exposure_metrics.top_n_concentration(portfolio, 5):.1%}"))
+    hhi = exposure_metrics.concentration_hhi(portfolio)
+    top5 = exposure_metrics.top_n_concentration(portfolio, 5)
+    summary_rows.append(_build_table_rows("HHI", f"{hhi:.4f}"))
+    summary_rows.append(_build_table_rows("Top 5", f"{top5:.1%}"))
 
     # COL 2: Risk
     risk_rows: list[str] = []
@@ -356,8 +364,10 @@ def render_metrics_detail(
                 sharpe=sharpe, ann_vol=ann_vol,
                 current_drawdown=abs(curr_dd),
             )
-            dd_rows.append(_build_table_rows("E[DD]", _safe_fmt(dd_info["expected_dd_pct"], "{:.1%}")))
-            dd_rows.append(_build_table_rows("P(DD≥10%)", _safe_fmt(dd_info["dd_prob_10pct"], "{:.1%}")))
+            edd = _safe_fmt(dd_info["expected_dd_pct"], "{:.1%}")
+            pdd = _safe_fmt(dd_info["dd_prob_10pct"], "{:.1%}")
+            dd_rows.append(_build_table_rows("E[DD]", edd))
+            dd_rows.append(_build_table_rows("P(DD≥10%)", pdd))
     else:
         dd_rows.append(_build_table_rows("—", "Need returns data"))
 
@@ -432,7 +442,10 @@ def render_metrics_detail(
     max_rows = max(len(col) for col in all_cols)
     for col in all_cols:
         while len(col) < max_rows:
-            col.append('<tr><td style="padding:3px 8px;">&nbsp;</td><td style="padding:3px 8px;">&nbsp;</td></tr>')
+            col.append(
+                '<tr><td style="padding:3px 8px;">&nbsp;</td>'
+                '<td style="padding:3px 8px;">&nbsp;</td></tr>'
+            )
 
     # --- Build the combined HTML table via components.html (iframe) ---
     col_headers = ["Summary", "Risk", "Drawdown", "Factors", "Correlation"]
@@ -514,8 +527,10 @@ def render_metrics_detail(
 
     st.caption(
         "**L/S Corr** — avg correlation between long and short books; "
-        "high = both sides share similar systematic exposure, net P&L driven by stock selection. "
-        " · **Idio %** — avg share of position return variance NOT explained by the market (1 − R² from CAPM); "
+        "high = both sides share similar systematic exposure, "
+        "net P&L driven by stock selection. "
+        " · **Idio %** — avg share of position return variance "
+        "NOT explained by the market (1 − R² from CAPM); "
         "high = book is driven by stock-specific alpha, low = paying for beta."
     )
 

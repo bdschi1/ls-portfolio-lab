@@ -231,9 +231,13 @@ def load_from_pdf(file_path: str | Path, nav: float = 3_000_000_000.0) -> Portfo
         rows = table[1:]
 
         try:
-            df = pl.DataFrame(
-                {headers[i]: [row[i] if i < len(row) else None for row in rows] for i in range(len(headers))}
-            )
+            col_data = {
+                headers[i]: [
+                    row[i] if i < len(row) else None for row in rows
+                ]
+                for i in range(len(headers))
+            }
+            df = pl.DataFrame(col_data)
             return _parse_portfolio_df(df, nav=nav, source=str(path))
         except (ValueError, KeyError):
             continue

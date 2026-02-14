@@ -4,11 +4,9 @@ from datetime import date
 
 import numpy as np
 import polars as pl
-import pytest
 
 from core.portfolio import Portfolio, Position
-from core.rebalancer import RebalanceRequest, RebalanceResult, compute_rebalance
-
+from core.rebalancer import RebalanceRequest, compute_rebalance
 
 # ---------------------------------------------------------------------------
 # Fixtures

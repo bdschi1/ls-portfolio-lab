@@ -195,6 +195,9 @@ def drawdown_summary(prices_or_nav: pl.Series) -> dict[str, float]:
         "current_drawdown": current_drawdown(prices_or_nav),
         "current_drawdown_duration": drawdown_duration(prices_or_nav),
         "avg_drawdown_depth": float(np.mean(all_depths)) if all_depths else 0.0,
-        "avg_recovery_days": float(np.mean([e.days_to_recovery for e in recovered])) if recovered else 0.0,
+        "avg_recovery_days": (
+            float(np.mean([e.days_to_recovery for e in recovered]))
+            if recovered else 0.0
+        ),
         "num_episodes": len(episodes),
     }

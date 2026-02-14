@@ -16,7 +16,7 @@ import numpy as np
 import polars as pl
 from scipy.optimize import minimize
 
-from core.metrics import exposure_metrics, risk_metrics
+from core.metrics import risk_metrics
 from core.portfolio import Portfolio
 
 logger = logging.getLogger(__name__)
