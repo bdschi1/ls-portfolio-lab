@@ -293,6 +293,14 @@ make fmt                          # Auto-format
 
 MIT — see [LICENSE](LICENSE).
 
+## Related Work
+
+This portfolio analytics tool is informed by recent research in financial AI and portfolio construction:
+
+- **AlphaAgents** (Zhao et al., 2025) — BlackRock's multi-agent framework for equity portfolio construction using Fundamental, Sentiment, and Valuation agents with risk tolerance conditioning. Validates the multi-factor signal integration and risk-profile-aware portfolio construction approach. [arXiv:2508.11152](https://arxiv.org/abs/2508.11152)
+- **XAI for SME Investment** (Babaei & Giudici, 2025) — Dual-component XAI framework using XGBoost + SHAP for credit risk and expected return estimation. Demonstrates that different features matter for risk vs. return — directly relevant to the factor decomposition in portfolio analytics. [Expert Systems with Applications, 2025]
+- **Interpretable ML for Corporate Financialization** (Wang et al., 2025) — SHAP-enhanced framework revealing non-linear relationships between financial variables. The finding that feature engineering choices matter as much as model selection informs our data provider abstraction layer. [Mathematics, 2025]
+
 ---
 
 ![Python](https://img.shields.io/badge/python-3.11+-3776AB?style=flat&logo=python&logoColor=white)
