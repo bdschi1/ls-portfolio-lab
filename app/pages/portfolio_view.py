@@ -267,14 +267,10 @@ def render() -> None:
                 from data.universe import flat_universe
                 all_tickers = flat_universe()
                 prices = cache.get_current_prices(all_tickers)
-                # Fetch betas from info
-                betas = {}
-                for t in all_tickers:
-                    info = cache.get_ticker_info(t)
-                    betas[t] = info.get("beta", 1.0)
 
+                # Generate with default betas (1.0) for speed — avoids
+                # 427 individual yfinance API calls for ticker info.
                 portfolio = generate_mock_portfolio(
-                    betas=betas,
                     prices=prices,
                     nav=get_settings().get("nav", 3_000_000_000),
                 )

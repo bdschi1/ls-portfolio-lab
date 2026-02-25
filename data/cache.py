@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import logging
 import sqlite3
+import time
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
@@ -48,6 +49,11 @@ class DataCache:
             # Default to Yahoo Finance (always available, no extra deps)
             from data.yahoo_provider import YahooProvider
             self.provider = YahooProvider()
+
+        # Short-lived in-memory cache for current prices (TTL in seconds)
+        self._current_price_cache: dict[str, float] = {}
+        self._current_price_ts: float = 0.0
+        self._current_price_ttl: int = 60  # seconds
 
         self._init_db()
 
@@ -283,8 +289,24 @@ class DataCache:
     # --- Current prices ---
 
     def get_current_prices(self, tickers: list[str]) -> dict[str, float]:
-        """Fetch latest prices (always live — not cached for staleness reasons)."""
-        return self.provider.fetch_current_prices(tickers)
+        """Fetch latest prices with a short-lived in-memory cache (60s TTL).
+
+        Prevents hammering the API on repeated page refreshes while still
+        returning reasonably fresh data for EOD-level analysis.
+        """
+        now = time.monotonic()
+        age = now - self._current_price_ts
+
+        # Check if cache is fresh and has all requested tickers
+        all_cached = all(t in self._current_price_cache for t in tickers)
+        if age < self._current_price_ttl and all_cached:
+            return {t: self._current_price_cache[t] for t in tickers}
+
+        # Fetch fresh prices
+        fresh = self.provider.fetch_current_prices(tickers)
+        self._current_price_cache.update(fresh)
+        self._current_price_ts = now
+        return fresh
 
     # --- Risk-free rate ---
 
@@ -303,6 +325,8 @@ class DataCache:
         old_name = getattr(self.provider, "name", type(self.provider).__name__)
         new_name = getattr(provider, "name", type(provider).__name__)
         self.provider = provider
+        self._current_price_cache.clear()
+        self._current_price_ts = 0.0
         logger.info("Data provider switched: %s → %s", old_name, new_name)
 
     @property

@@ -16,6 +16,7 @@ dependencies = [
     "openpyxl>=3.1.0",
     "pyyaml>=6.0",
     "tenacity>=8.0.0",
+    "bds-data-providers @ git+https://github.com/bdschi1/financial-data-providers.git",
 ]
 
 [project.optional-dependencies]

@@ -33,7 +33,7 @@ def main() -> None:
         st.markdown("""<style>
         /* --- Navigation radio: bigger font --- */
         section[data-testid="stSidebar"] div[role="radiogroup"] label p {
-            font-size: 1.44rem !important;
+            font-size: clamp(13px, 1.0vw, 19px) !important;
             font-weight: 600 !important;
         }
         /* --- All sidebar labels, text, captions --- */
@@ -44,16 +44,16 @@ def main() -> None:
         section[data-testid="stSidebar"] .stRadio label p,
         section[data-testid="stSidebar"] .stToggle label p,
         section[data-testid="stSidebar"] .stCheckbox label p {
-            font-size: 1.25rem !important;
+            font-size: clamp(12px, 0.9vw, 17px) !important;
         }
         section[data-testid="stSidebar"] .stSelectbox div[data-baseweb="select"] span,
         section[data-testid="stSidebar"] .stTextInput input,
         section[data-testid="stSidebar"] .stNumberInput input {
-            font-size: 1.25rem !important;
+            font-size: clamp(12px, 0.9vw, 17px) !important;
         }
         section[data-testid="stSidebar"] p,
         section[data-testid="stSidebar"] .stMarkdown p {
-            font-size: 1.19rem !important;
+            font-size: clamp(11px, 0.85vw, 16px) !important;
         }
         /* --- Compress spacing: tighter gaps --- */
         section[data-testid="stSidebar"] .block-container {
@@ -81,7 +81,7 @@ def main() -> None:
         }
         /* Nav description text under each radio option */
         .nav-desc {
-            font-size: 0.98rem !important;
+            font-size: clamp(10px, 0.75vw, 14px) !important;
             color: #888 !important;
             margin-top: -0.1rem;
             margin-bottom: 0.3rem;
@@ -349,12 +349,17 @@ $$EV = (\text{hit rate} \times \text{avg win}) - (\text{miss rate} \times \text{
 
 ### References
 
-Bailey, D.H. & Lopez de Prado, M. (2014). *Algorithmic Finance*, 3(1-2), 99-109.
-DOI: [10.3233/AF-140035](https://doi.org/10.3233/AF-140035)
+Bailey, D.H. & Lopez de Prado, M. (2014). "The Deflated Sharpe Ratio." *Journal of Portfolio Management*, 40(5), 94-107. — DSR, σ(SR) with skewness/kurtosis correction.
 
-Fama, E.F. & French, K.R. (1993). *Journal of Financial Economics*, 33(1), 3-56.
+Bailey, D.H. & Lopez de Prado, M. (2014). "The Sharpe Ratio Efficient Frontier." *Algorithmic Finance*, 3(1-2), 99-109. DOI: [10.3233/AF-140035](https://doi.org/10.3233/AF-140035) — E[DD], P(DD≥b), time in DD.
 
-Carhart, M.M. (1997). *The Journal of Finance*, 52(1), 57-82.
+Lo, A. (2002). "The Statistics of Sharpe Ratios." *Financial Analysts Journal*, 58(4), 36-52. — SR standard error, PSR, MinTRL.
+
+Paleologo, G. (2024). *The Elements of Quantitative Investing*, Insight 4.2. — Partial correlations via precision matrix.
+
+Fama, E.F. & French, K.R. (1993). *Journal of Financial Economics*, 33(1), 3-56. — FF3 model.
+
+Carhart, M.M. (1997). *The Journal of Finance*, 52(1), 57-82. — Momentum (FF4).
 """)
 
         btn_cols = st.columns(2)

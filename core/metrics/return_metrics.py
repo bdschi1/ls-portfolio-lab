@@ -12,6 +12,13 @@ import numpy as np
 import polars as pl
 from scipy.stats import kurtosis, norm, skew
 
+from core.metrics.sharpe_inference import (
+    expected_maximum_sharpe_ratio,
+    minimum_track_record_length,
+    probabilistic_sharpe_ratio,
+    sharpe_ratio_variance,
+)
+
 TRADING_DAYS_PER_YEAR = 252
 
 
@@ -224,15 +231,9 @@ def deflated_sharpe_ratio(
     Adjusts the observed Sharpe ratio for non-normality (skewness, kurtosis)
     and multiple testing (number of strategy trials).
 
-    DSR = Φ[ (SR_observed − SR_benchmark) / σ(SR) ]
-
-    where:
-        SR_benchmark = √(V[SR_hat]) × ((1 − γ)·z_α + γ·z_α^(N))
-                     ≈ expected max SR under null (from N independent trials)
-        σ(SR) = √[ (1 − γ₃·SR + (γ₄−1)/4·SR²) / T ]
-        γ₃ = skewness of returns
-        γ₄ = excess kurtosis of returns
-        T  = number of observations
+    Uses sharpe_ratio_variance() for the full asymptotic SE and
+    expected_maximum_sharpe_ratio() for the exact E[max] of K normals
+    (replacing the √(2·ln(K)) approximation).
 
     Args:
         daily_rets: daily portfolio return series
@@ -252,28 +253,94 @@ def deflated_sharpe_ratio(
 
     rets_np = daily_rets.to_numpy()
     gamma3 = float(skew(rets_np, bias=False))
-    gamma4 = float(kurtosis(rets_np, bias=False))  # excess kurtosis
+    gamma4 = float(kurtosis(rets_np, bias=False, fisher=False))  # regular kurtosis
 
-    # Standard error of the Sharpe ratio (Lo, 2002 / Bailey & Lopez de Prado)
-    sr_var = (1.0 - gamma3 * sr + (gamma4 - 1.0) / 4.0 * sr ** 2) / n
+    # Full asymptotic variance with non-normality corrections
+    sr_var = sharpe_ratio_variance(sr, n, skew=gamma3, kurtosis=gamma4)
     if sr_var <= 0:
         sr_var = 1.0 / n
     sr_std = math.sqrt(sr_var)
 
-    # Expected max SR under the null (from num_trials independent tests)
-    # E[max(Z_1..Z_N)] ≈ Φ^{-1}(1 − 1/(N·e)) × √(2·ln(N)) for large N
-    # Simplified: for N=1, benchmark SR = 0
-    if num_trials <= 1:
-        sr_benchmark = 0.0
-    else:
-        # Euler-Mascheroni approximation for expected max of N standard normals
-        euler_mascheroni = 0.5772156649
-        z = math.sqrt(2.0 * math.log(num_trials))
-        sr_benchmark = sr_std * (z - (math.log(math.pi) + euler_mascheroni) / (2.0 * z))
+    # Expected max SR under the null (exact for small K)
+    sr_benchmark = expected_maximum_sharpe_ratio(num_trials, sr_var, sr0=0.0)
 
-    # DSR = probability that the true SR > 0 given observed SR and its std error
     if sr_std == 0:
         return 1.0 if sr > sr_benchmark else 0.0
     dsr = float(norm.cdf((sr - sr_benchmark) / sr_std))
 
     return dsr
+
+
+def sharpe_psr(
+    daily_rets: pl.Series,
+    risk_free_rate: float = 0.05,
+    sr0: float = 0.0,
+) -> float:
+    """Probabilistic Sharpe Ratio — P(true SR > SR₀).
+
+    Convenience wrapper that extracts distribution moments from a
+    Polars return series and delegates to sharpe_inference.
+
+    Args:
+        daily_rets: daily portfolio return series.
+        risk_free_rate: annualized risk-free rate.
+        sr0: benchmark Sharpe ratio to test against.
+
+    Returns:
+        PSR in [0, 1].
+    """
+    n = daily_rets.len()
+    if n < 10:
+        return 0.0
+
+    sr = sharpe_ratio(daily_rets, risk_free_rate)
+    rets_np = daily_rets.to_numpy()
+    gamma3 = float(skew(rets_np, bias=False))
+    gamma4 = float(kurtosis(rets_np, bias=False, fisher=False))
+
+    return probabilistic_sharpe_ratio(sr, sr0, t=n, skew=gamma3, kurtosis=gamma4)
+
+
+def sharpe_confidence_interval(
+    daily_rets: pl.Series,
+    risk_free_rate: float = 0.05,
+    confidence: float = 0.95,
+) -> dict[str, float]:
+    """Sharpe ratio confidence interval with PSR and MinTRL.
+
+    Args:
+        daily_rets: daily portfolio return series.
+        risk_free_rate: annualized risk-free rate.
+        confidence: confidence level (default 0.95).
+
+    Returns:
+        Dict with keys: sr, ci_lower, ci_upper, psr, min_track_record.
+    """
+    n = daily_rets.len()
+    if n < 10:
+        return {
+            "sr": 0.0, "ci_lower": 0.0, "ci_upper": 0.0,
+            "psr": 0.0, "min_track_record": float("inf"),
+        }
+
+    sr = sharpe_ratio(daily_rets, risk_free_rate)
+    rets_np = daily_rets.to_numpy()
+    gamma3 = float(skew(rets_np, bias=False))
+    gamma4 = float(kurtosis(rets_np, bias=False, fisher=False))
+
+    var = sharpe_ratio_variance(sr, n, skew=gamma3, kurtosis=gamma4)
+    se = math.sqrt(max(var, 1e-20))
+
+    alpha = 1.0 - confidence
+    z = float(norm.ppf(1.0 - alpha / 2.0))
+
+    psr = probabilistic_sharpe_ratio(sr, sr0=0.0, t=n, skew=gamma3, kurtosis=gamma4)
+    min_trl = minimum_track_record_length(sr, sr0=0.0, skew=gamma3, kurtosis=gamma4)
+
+    return {
+        "sr": sr,
+        "ci_lower": sr - z * se,
+        "ci_upper": sr + z * se,
+        "psr": psr,
+        "min_track_record": min_trl,
+    }

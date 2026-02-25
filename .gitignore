@@ -2,15 +2,24 @@
 __pycache__/
 *.py[cod]
 *$py.class
+*.so
 *.egg-info/
+*.egg
 dist/
 build/
-*.egg
+.eggs/
+*.whl
+*.tar.gz
 
-# Environment
-.env
-.venv/
+# Virtual environments
 venv/
+.venv/
+env/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
 
 # Data cache (local only — user-specific market data)
 data_cache/
@@ -18,9 +27,9 @@ data_cache/
 # Saved portfolios (user-specific)
 saved_portfolios/
 
-# IDE
-.idea/
+# IDE / editor
 .vscode/
+.idea/
 *.swp
 *.swo
 *~
@@ -28,26 +37,39 @@ saved_portfolios/
 # OS
 .DS_Store
 Thumbs.db
+Desktop.ini
 
 # Streamlit
 .streamlit/secrets.toml
 
-# Test / Coverage
+# Test / coverage
+.pytest_cache/
 .coverage
 htmlcov/
-.pytest_cache/
+.tox/
 
-# Ruff
+# Linting / type checking
 .ruff_cache/
-
-# Claude
-.claude/
+.mypy_cache/
 
 # Jupyter
 .ipynb_checkpoints/
 
-## AI Tools & Local Assistants
+# AI tools & local assistants
 .claude/
 .anthropic/
 .google/
 .openai/
+
+# Model artifacts (safety — should never be in this repo)
+offload_temp/
+*.pt
+*.bin
+*.safetensors
+*.gguf
+hf_cache/
+
+# Build outputs
+results/
+outputs/
+logs/

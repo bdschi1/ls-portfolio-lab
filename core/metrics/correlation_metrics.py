@@ -157,6 +157,96 @@ def least_correlated_pairs(
     return pairs[:top_n]
 
 
+def partial_correlation_matrix(
+    returns_df: pl.DataFrame,
+    tickers: list[str],
+) -> np.ndarray:
+    """
+    Compute partial correlation matrix via the precision matrix.
+
+    Partial correlation between assets i and j measures their
+    correlation after controlling for all other assets. This reveals
+    direct relationships hidden by common factor exposure.
+
+    Uses the precision matrix (inverse covariance):
+        ρ_partial(i,j) = -Ω⁻¹_{i,j} / √(Ω⁻¹_{i,i} × Ω⁻¹_{j,j})
+
+    In MVO, optimal weights are w ∝ Ω⁻¹α, so the precision matrix
+    entries naturally weight the portfolio. Partial correlations show
+    which assets provide independent diversification.
+
+    Reference:
+        Paleologo, G. (2024). The Elements of Quantitative Investing.
+        Insight 4.2, p. 110: Precision Matrix and Partial Correlations.
+
+    Returns (n, n) numpy partial correlation matrix.
+    Diagonal elements are 1.0 (self-partial-correlation).
+    """
+    available = [t for t in tickers if t in returns_df.columns]
+    if len(available) < 2:
+        return np.array([])
+
+    mat = returns_df.select(available).drop_nulls().to_numpy()
+    if mat.shape[0] < 10:
+        return np.eye(len(available))
+
+    corr = np.corrcoef(mat, rowvar=False)
+
+    try:
+        precision = np.linalg.inv(corr)
+    except np.linalg.LinAlgError:
+        # Singular matrix — fall back to pseudoinverse
+        precision = np.linalg.pinv(corr)
+
+    n = precision.shape[0]
+    partial = np.zeros((n, n))
+    diag = np.diag(precision)
+
+    for i in range(n):
+        for j in range(n):
+            if i == j:
+                partial[i, j] = 1.0
+            else:
+                denom = np.sqrt(abs(diag[i] * diag[j]))
+                if denom > 1e-12:
+                    partial[i, j] = -precision[i, j] / denom
+                else:
+                    partial[i, j] = 0.0
+
+    return partial
+
+
+def most_partially_correlated_pairs(
+    returns_df: pl.DataFrame,
+    tickers: list[str],
+    top_n: int = 10,
+) -> list[tuple[str, str, float]]:
+    """
+    Find pairs with highest absolute partial correlation.
+
+    These are the pairs with the strongest direct relationship
+    after controlling for all other assets — useful for identifying
+    redundant positions that aren't diversifying.
+
+    Reference:
+        Paleologo (2024), Insight 4.2.
+    """
+    available = [t for t in tickers if t in returns_df.columns]
+    pcorr = partial_correlation_matrix(returns_df, available)
+    if pcorr.size == 0:
+        return []
+
+    n = pcorr.shape[0]
+    pairs: list[tuple[str, str, float]] = []
+
+    for i in range(n):
+        for j in range(i + 1, n):
+            pairs.append((available[i], available[j], float(pcorr[i, j])))
+
+    pairs.sort(key=lambda x: abs(x[2]), reverse=True)
+    return pairs[:top_n]
+
+
 def correlation_summary(
     returns_df: pl.DataFrame,
     long_tickers: list[str],

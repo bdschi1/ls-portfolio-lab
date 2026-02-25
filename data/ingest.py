@@ -7,6 +7,7 @@ Handles various column naming conventions and fills in missing data.
 from __future__ import annotations
 
 import logging
+import re
 from datetime import date
 from pathlib import Path
 
@@ -44,6 +45,21 @@ SIDE_ALIASES: dict[str, str] = {
 }
 
 
+# Bloomberg terminal ticker pattern: <TICKER> <2-letter exchange> EQUITY
+_BLOOMBERG_SUFFIX_RE = re.compile(r"\s+[A-Z]{2}\s+EQUITY$")
+
+
+def _clean_ticker(raw: str) -> str:
+    """Strip Bloomberg terminal suffixes (e.g., 'AAPL US EQUITY' -> 'AAPL').
+
+    Handles the standard format: TICKER <exchange> EQUITY where <exchange>
+    is a 2-letter code (US, LN, JP, GR, FP, CN, AU, etc.).
+    Plain tickers pass through unchanged.
+    """
+    cleaned = raw.strip().upper()
+    return _BLOOMBERG_SUFFIX_RE.sub("", cleaned)
+
+
 def _standardize_columns(df: pl.DataFrame) -> pl.DataFrame:
     """Rename columns to standard names using alias lookup."""
     rename_map: dict[str, str] = {}
@@ -76,9 +92,11 @@ def load_from_excel(
     """
     Load a portfolio from an Excel (.xlsx) or CSV (.csv) file.
 
-    Minimum required columns: ticker, side, shares (or weight)
-    Optional: entry_price, entry_date, sector, subsector
+    Minimum required columns: ticker, shares (or weight)
+    Optional: side, entry_price, entry_date, sector, subsector
 
+    Side column is optional when shares are signed (negative = short).
+    Bloomberg-format tickers (e.g., 'AAPL US EQUITY') are auto-cleaned.
     If weight is provided instead of shares, positions are sized using NAV.
     If entry_price is missing, it defaults to 0 (updated when prices are fetched).
     """
@@ -120,8 +138,11 @@ def _parse_portfolio_df(
     if not has_ticker:
         msg = f"Missing required column 'ticker' in {source}. Found: {df.columns}"
         raise ValueError(msg)
-    if not has_side:
-        msg = f"Missing required column 'side' in {source}. Found: {df.columns}"
+    if not has_side and not has_shares:
+        msg = (
+            f"Missing required column 'side' in {source}. "
+            f"Provide a 'side' column or use signed shares. Found: {df.columns}"
+        )
         raise ValueError(msg)
     if not has_shares and not has_weight:
         msg = f"Need either 'shares' or 'weight' column in {source}. Found: {df.columns}"
@@ -130,21 +151,28 @@ def _parse_portfolio_df(
     positions: list[Position] = []
 
     for row in df.iter_rows(named=True):
-        ticker = str(row["ticker"]).strip().upper()
-        side = _standardize_side(str(row["side"]))
+        ticker = _clean_ticker(str(row["ticker"]))
 
         # Sizing: prefer shares, fall back to weight-based
         if has_shares and row.get("shares") is not None:
             shares = float(row["shares"])
         elif has_weight and row.get("weight") is not None:
-            # Weight is a fraction of NAV; need price to compute shares
-            # For now, store weight and resolve later when prices are available
             weight = float(row["weight"])
-            # Placeholder: assume $100 price, will be corrected on price update
             shares = abs(weight) * nav / 100.0
         else:
             logger.warning("No shares or weight for %s, skipping", ticker)
             continue
+
+        if shares == 0:
+            logger.warning("Zero shares for %s, skipping", ticker)
+            continue
+
+        # Side: explicit column takes priority; otherwise infer from sign
+        if has_side:
+            side = _standardize_side(str(row["side"]))
+        else:
+            side = "SHORT" if shares < 0 else "LONG"
+            shares = abs(shares)
 
         # Entry price (optional)
         entry_price = float(row.get("entry_price", 0) or 0)

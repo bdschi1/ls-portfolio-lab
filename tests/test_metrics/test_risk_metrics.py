@@ -103,23 +103,50 @@ class TestPortfolioBeta:
 
 
 class TestVaR:
-    def test_var_positive(self):
+    def test_var_equals_percentile(self):
+        """Historical VaR should equal the 5th percentile of the loss distribution."""
         rets = _make_returns(500, mean=0.0, std=0.02)
         var = var_historical(rets, confidence=0.95)
-        assert var > 0  # VaR is a positive number representing loss
+        # Manually compute: 5th percentile of returns, take absolute value
+        rets_np = rets.to_numpy()
+        expected = abs(float(np.percentile(rets_np, 5)))
+        assert var == pytest.approx(expected, rel=0.05)
+
+    def test_var_parametric_formula(self):
+        """Parametric VaR = |μ + z × σ| where z = norm.ppf(0.05)."""
+        from scipy.stats import norm as scipy_norm
+        rets = _make_returns(1000, mean=0.0, std=0.01)
+        p_var = var_parametric(rets, confidence=0.95)
+        mu = float(rets.mean())
+        sigma = float(rets.std())
+        z = scipy_norm.ppf(0.05)
+        expected = abs(mu + z * sigma)
+        assert p_var == pytest.approx(expected, rel=1e-6)
 
     def test_var_parametric_close_to_historical(self):
-        rets = _make_returns(1000, mean=0.0, std=0.01)
+        """For Gaussian returns, parametric and historical VaR should converge."""
+        rets = _make_returns(10000, mean=0.0, std=0.01, seed=42)
         h_var = var_historical(rets, confidence=0.95)
         p_var = var_parametric(rets, confidence=0.95)
-        # Should be in the same ballpark
-        assert abs(h_var - p_var) < 0.02
+        assert h_var == pytest.approx(p_var, rel=0.10)  # within 10% for large N
+
+    def test_cvar_equals_tail_mean(self):
+        """CVaR = average of returns below VaR threshold (absolute value)."""
+        rets = _make_returns(500, seed=42)
+        cvar = cvar_historical(rets)
+        # Manually compute
+        rets_np = rets.to_numpy()
+        threshold = np.percentile(rets_np, 5)
+        tail = rets_np[rets_np <= threshold]
+        expected = abs(float(np.mean(tail)))
+        assert cvar == pytest.approx(expected, rel=0.05)
 
     def test_cvar_exceeds_var(self):
+        """CVaR is always ≥ VaR (it's the tail mean, which is further out)."""
         rets = _make_returns(500)
         var = var_historical(rets)
         cvar = cvar_historical(rets)
-        assert cvar >= var  # CVaR is always ≥ VaR
+        assert cvar >= var
 
 
 class TestDaysToLiquidate:
@@ -138,8 +165,8 @@ class TestDaysToLiquidate:
 
 
 class TestMarginalContribution:
-    def test_mcr_sums_to_portfolio_vol(self):
-        """MCR should approximately sum to portfolio vol."""
+    def test_mcr_sums_to_daily_portfolio_variance(self):
+        """Σ MCR_i = daily portfolio variance (w'Σw). This is the Euler decomposition."""
         rng = np.random.default_rng(42)
         df = pl.DataFrame({
             "A": rng.normal(0, 0.02, 252),
@@ -149,8 +176,23 @@ class TestMarginalContribution:
         weights = {"A": 0.4, "B": 0.3, "C": 0.3}
         mcr = marginal_contribution_to_risk(weights, df)
 
-        # Sum of MCR should approximate portfolio volatility (daily)
         assert len(mcr) == 3
+        # MCR_i = w_i × (Σw)_i / σ_p
+        # Σ MCR_i = w'Σw / σ_p = σ_p (daily vol)
         total_mcr = sum(mcr.values())
-        # MCR values should be non-trivial
-        assert total_mcr != 0
+        # Compute daily portfolio vol directly
+        tickers = ["A", "B", "C"]
+        w = np.array([weights[t] for t in tickers])
+        cov = np.cov(df.select(tickers).to_numpy(), rowvar=False, ddof=1)
+        daily_vol = np.sqrt(w @ cov @ w)
+        assert total_mcr == pytest.approx(daily_vol, rel=0.01)
+
+    def test_mcr_proportional_to_weight(self):
+        """For identical assets (same returns), MCR ∝ weight."""
+        rng = np.random.default_rng(42)
+        rets = rng.normal(0, 0.01, 252)
+        df = pl.DataFrame({"A": rets, "B": rets})
+        weights = {"A": 0.6, "B": 0.4}
+        mcr = marginal_contribution_to_risk(weights, df)
+        # Identical assets → MCR ratio should equal weight ratio
+        assert mcr["A"] / mcr["B"] == pytest.approx(0.6 / 0.4, rel=0.01)

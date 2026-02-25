@@ -126,12 +126,12 @@ def render_top_metrics_bar(
             padding: 0.15rem 0 !important;
         }
         div[data-testid="stMetric"] div[data-testid="stMetricLabel"] p {
-            font-size: 1.19rem !important;
+            font-size: clamp(10px, 0.85vw, 16px) !important;
             font-weight: 700 !important;
             color: #2ecc71 !important;
         }
         div[data-testid="stMetric"] div[data-testid="stMetricValue"] {
-            font-size: 1.56rem !important;
+            font-size: clamp(13px, 1.1vw, 21px) !important;
             font-weight: 700 !important;
             color: #2ecc71 !important;
         }
@@ -340,6 +340,22 @@ def render_metrics_detail(
         risk_rows.append(_build_table_rows("CVaR 95%", f"{cvar:.2%}"))
         dsr = return_metrics.deflated_sharpe_ratio(port_rets, risk_free_rate)
         risk_rows.append(_build_table_rows("DSR", f"{dsr:.1%}"))
+
+        # Sharpe inference: PSR, CI, MinTRL
+        sr_ci = return_metrics.sharpe_confidence_interval(port_rets, risk_free_rate)
+        risk_rows.append(_build_table_rows("PSR", f"{sr_ci['psr']:.1%}"))
+        risk_rows.append(_build_table_rows(
+            "Sharpe CI",
+            f"[{sr_ci['ci_lower']:.2f}, {sr_ci['ci_upper']:.2f}]",
+        ))
+        min_trl = sr_ci["min_track_record"]
+        n_obs = port_rets.len()
+        if not math.isinf(min_trl) and min_trl > n_obs:
+            extra = int(min_trl - n_obs)
+            risk_rows.append(_build_table_rows("MinTRL", f"Need {extra}+ days"))
+        elif not math.isinf(min_trl):
+            risk_rows.append(_build_table_rows("MinTRL", "✓ Sufficient"))
+
         if has_returns and benchmark in returns_df.columns:
             te = return_metrics.tracking_error(port_rets, returns_df[benchmark])
             risk_rows.append(_build_table_rows("Track Err", f"{te:.1%}"))
@@ -471,7 +487,7 @@ def render_metrics_detail(
   * {{ margin: 0; padding: 0; box-sizing: border-box; }}
   body {{
     font-family: "Source Sans Pro", sans-serif;
-    font-size: 1.19rem;
+    font-size: clamp(11px, 0.85vw, 15px);
     background: transparent;
     color: #e0e0e0;
   }}
@@ -483,7 +499,7 @@ def render_metrics_detail(
   table.grid > thead > tr > th {{
     padding: 6px 8px;
     font-weight: 700;
-    font-size: 1.25rem;
+    font-size: clamp(12px, 0.9vw, 17px);
     border-bottom: 2px solid #555;
     background: #1a1a2e;
     color: #e0e0e0;
