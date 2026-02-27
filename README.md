@@ -12,11 +12,18 @@ This is a risk management tool, not a signal generator. It answers the question:
 
 ```bash
 git clone https://github.com/bdschi1/ls-portfolio-lab.git && cd ls-portfolio-lab
+./run.sh            # setup + launch Streamlit app
+```
+
+Or manually:
+
+```bash
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
-
 streamlit run app/main.py
 ```
+
+Run `./run.sh help` for all commands (`setup`, `app`, `test`).
 
 Open `http://localhost:8501`. Generate a mock portfolio or upload your own (CSV/Excel).
 
@@ -189,10 +196,21 @@ The provider layer uses an abstract base class with 4 methods (`fetch_daily_pric
 ## Page Workflow
 
 ```
-Portfolio Dashboard  →  Trade Simulator  →  Paper Portfolio  →  PM Scorecard
-   (load/generate)      (propose trades)    (toggle ON first)   (needs trades)
-                         (preview impact)    (journal + NAV)     (hit rate, slugging)
-                         (apply or discard)  (daily snapshots)   (sector skill)
+┌─ PAGE 1 ── Portfolio Dashboard ──────────────────────────┐
+│  Load or generate portfolio                               │
+└───────────────────────────────┬───────────────────────────┘
+                                ▼
+┌─ PAGE 2 ── Trade Simulator ──────────────────────────────┐
+│  Propose trades, preview impact, apply or discard         │
+└───────────────────────────────┬───────────────────────────┘
+                                ▼
+┌─ PAGE 3 ── Paper Portfolio ──────────────────────────────┐
+│  Toggle ON first · trade journal + NAV · daily snapshots  │
+└───────────────────────────────┬───────────────────────────┘
+                                ▼
+┌─ PAGE 4 ── PM Scorecard ────────────────────────────────┐
+│  Hit rate, slugging %, sector skill (needs trades)        │
+└──────────────────────────────────────────────────────────┘
 ```
 
 **Paper Portfolio** and **PM Scorecard** require:
