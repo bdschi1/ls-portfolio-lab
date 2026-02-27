@@ -14,6 +14,10 @@ This is a risk management tool, not a signal generator. It answers the question:
 
 This is a continually developed project. Features, interfaces, and test coverage expand over time as new research ideas and workflow needs arise.
 
+**Key questions this project answers:**
+- *What happens to my risk profile if I add this trade?*
+- *How concentrated is my portfolio across sectors, factors, and individual names?*
+
 ---
 
 ## Quickstart
