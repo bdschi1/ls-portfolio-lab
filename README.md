@@ -1,10 +1,18 @@
 # LS Portfolio Lab
 
+![Python](https://img.shields.io/badge/python-3.12+-3776AB?style=flat&logo=python&logoColor=white)
+![Streamlit](https://img.shields.io/badge/Streamlit-FF4B4B?style=flat&logo=streamlit&logoColor=white)
+![Polars](https://img.shields.io/badge/Polars-CD792C?style=flat&logo=polars&logoColor=white)
+![Plotly](https://img.shields.io/badge/Plotly-3F4F75?style=flat&logo=plotly&logoColor=white)
+![Pydantic](https://img.shields.io/badge/Pydantic-E92063?style=flat&logo=pydantic&logoColor=white)
+
 **Long/Short Equity Portfolio Risk Workbench**
 
 A Streamlit-based dashboard for monitoring and stress-testing long/short equity portfolios. It computes risk, return, and exposure metrics across a portfolio of long and short stock positions, lets you simulate proposed trades and see their impact before executing, and tracks paper portfolio performance over time.
 
 This is a risk management tool, not a signal generator. It answers the question: *"What happens to my risk profile if I add this trade?"*
+
+This is a continually developed project. Features, interfaces, and test coverage expand over time as new research ideas and workflow needs arise.
 
 ---
 
@@ -297,14 +305,18 @@ See [REFERENCES.md](REFERENCES.md) for full citations and implemented equations.
 
 ---
 
+## Contributing
+
+Contributions welcome. Areas for improvement:
+- Additional analytics and risk metrics
+- New data provider integrations
+- Enhanced chart types and dashboard views
+- Extended paper portfolio tracking features
+
+## Status
+
+This project is under active, ongoing development. Core analytics, trade simulation, and paper portfolio tracking are stable. New metrics, chart types, and provider integrations are added as workflow needs evolve.
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
-
----
-
-![Python](https://img.shields.io/badge/python-3.12+-3776AB?style=flat&logo=python&logoColor=white)
-![Streamlit](https://img.shields.io/badge/Streamlit-FF4B4B?style=flat&logo=streamlit&logoColor=white)
-![Polars](https://img.shields.io/badge/Polars-CD792C?style=flat&logo=polars&logoColor=white)
-![Plotly](https://img.shields.io/badge/Plotly-3F4F75?style=flat&logo=plotly&logoColor=white)
-![Pydantic](https://img.shields.io/badge/Pydantic-E92063?style=flat&logo=pydantic&logoColor=white)
