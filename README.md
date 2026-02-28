@@ -184,6 +184,19 @@ Switch providers in the sidebar under **Data Source**. The system auto-detects i
 
 The provider layer uses an abstract base class with 4 methods (`fetch_daily_prices`, `fetch_ticker_info`, `fetch_current_prices`, `fetch_risk_free_rate`). Each provider is a standalone module. A SQLite caching layer sits between the provider and the app, avoiding redundant API calls (18-hour staleness for prices, 7-day for fundamentals).
 
+### MCP Connectors (Claude Code / Claude Cowork)
+
+The repo includes a `.mcp.json` config that connects Claude Code sessions to external financial data providers via [MCP](https://modelcontextprotocol.io/). These complement the Python provider layer with direct data terminal access during AI-assisted sessions.
+
+| Provider | What It Provides |
+|----------|-----------------|
+| Morningstar | Fund/stock data and ratings |
+| S&P Global (Capital IQ) | Fundamental data, estimates, transactions |
+| FactSet | Pricing, fundamentals, analytics |
+| LSEG (Refinitiv) | Fixed income, FX, equities, macro |
+
+Each connector requires an active subscription. If unavailable, connectors are silently ignored — the Python providers continue to work independently.
+
 ---
 
 ## Analytics
@@ -311,15 +324,9 @@ See [REFERENCES.md](REFERENCES.md) for full citations and implemented equations.
 
 ## Contributing
 
-Contributions welcome. Areas for improvement:
-- Additional analytics and risk metrics
-- New data provider integrations
-- Enhanced chart types and dashboard views
-- Extended paper portfolio tracking features
+Under active development. Contributions welcome — areas for improvement include analytics/risk metrics, data provider integrations, chart types, and paper portfolio tracking.
 
-## Status
-
-This project is under active, ongoing development. Core analytics, trade simulation, and paper portfolio tracking are stable. New metrics, chart types, and provider integrations are added as workflow needs evolve.
+***Curiosity compounds. Rigor endures.***
 
 ## License
 
