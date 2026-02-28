@@ -138,7 +138,7 @@ ls-portfolio-lab/
 │   ├── snapshot.py                   # Daily snapshots — NAV, positions, sector exposures
 │   └── performance.py                # Time-weighted return, PM scorecard generation
 │
-├── tests/                            # 450 tests (pytest)
+├── tests/                            # 481 tests (pytest)
 │   ├── test_portfolio.py             # Portfolio, Position, ProposedTrade, TradeBasket models
 │   ├── test_trade_impact.py          # Trade application, simulation, cash tracking
 │   ├── test_rebalancer.py            # Optimizer constraints, convergence, side preservation
@@ -276,7 +276,7 @@ Copy `.env.example` to `.env` and uncomment as needed. No API keys required for 
 
 ```bash
 source .venv/bin/activate
-pytest tests/ -v               # Run all 450 tests
+pytest tests/ -v               # Run all 481 tests
 pytest tests/ -v --cov=core    # With coverage report
 make lint                      # Ruff linting
 make fmt                       # Auto-format
@@ -295,7 +295,7 @@ make fmt                       # Auto-format
 | **Optimization** | SciPy (SLSQP) |
 | **Statistics** | NumPy, SciPy |
 | **Persistence** | SQLite (cache), JSONL (trade log, snapshots) |
-| **Testing** | pytest (450 tests), pytest-cov |
+| **Testing** | pytest (481 tests), pytest-cov |
 | **Linting** | Ruff |
 | **Python** | 3.12+ |
 
