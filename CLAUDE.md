@@ -57,7 +57,7 @@ make coverage
 - Page workflow: Dashboard -> Trade Simulator -> Paper Portfolio -> PM Scorecard
 
 ## Testing Conventions
-- 450 tests in `tests/` with a `test_metrics/` subdirectory for per-module metric tests
+- 481 tests in `tests/` with a `test_metrics/` subdirectory for per-module metric tests
 - Tests use mock/synthetic data -- no live API calls
 - Run with `pytest tests/ -v` or `make test`
 - `pyproject.toml` sets `pythonpath = ["."]` so imports resolve without install
