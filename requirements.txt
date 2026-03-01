@@ -20,8 +20,8 @@ iniconfig==2.3.0
 Jinja2==3.1.6
 jsonschema==4.26.0
 jsonschema-specifications==2025.9.1
-# Editable install with no version control (ls-portfolio-lab==0.1.0)
--e /Users/bdsm4/Library/CloudStorage/Dropbox/bds_repos/Tier_1/ls-portfolio-lab
+# Editable install (ls-portfolio-lab==0.1.0)
+-e .
 MarkupSafe==3.0.3
 multitasking==0.0.12
 narwhals==2.16.0
