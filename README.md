@@ -268,4 +268,6 @@ Under active development. Contributions welcome — areas for improvement includ
 
 MIT — see [LICENSE](LICENSE).
 
+---
+
 ***Curiosity compounds. Rigor endures.***
