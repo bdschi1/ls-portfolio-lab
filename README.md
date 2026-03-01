@@ -184,19 +184,6 @@ Switch providers in the sidebar under **Data Source**. The system auto-detects i
 
 The provider layer uses an abstract base class with 4 methods (`fetch_daily_prices`, `fetch_ticker_info`, `fetch_current_prices`, `fetch_risk_free_rate`). Each provider is a standalone module. A SQLite caching layer sits between the provider and the app, avoiding redundant API calls (18-hour staleness for prices, 7-day for fundamentals).
 
-### MCP Connectors (Claude Code / Claude Cowork)
-
-The repo includes a `.mcp.json` config that connects Claude Code sessions to external financial data providers via [MCP](https://modelcontextprotocol.io/). These complement the Python provider layer with direct data terminal access during AI-assisted sessions.
-
-| Provider | What It Provides |
-|----------|-----------------|
-| Morningstar | Fund/stock data and ratings |
-| S&P Global (Capital IQ) | Fundamental data, estimates, transactions |
-| FactSet | Pricing, fundamentals, analytics |
-| LSEG (Refinitiv) | Fixed income, FX, equities, macro |
-
-Each connector requires an active subscription. If unavailable, connectors are silently ignored — the Python providers continue to work independently.
-
 ---
 
 ## Analytics
@@ -311,16 +298,6 @@ make fmt                       # Auto-format
 - Carhart, M.M. (1997). *The Journal of Finance*, 52(1), 57-82.
 
 See [REFERENCES.md](REFERENCES.md) for full citations and implemented equations. See [CITATION.cff](CITATION.cff) for machine-readable citation metadata.
-
----
-
-## Related Work
-
-- **AlphaAgents** (Zhao et al., 2025) — Multi-agent framework for equity portfolio construction using Fundamental, Sentiment, and Valuation agents with risk tolerance conditioning. [arXiv:2508.11152](https://arxiv.org/abs/2508.11152)
-- **XAI for SME Investment** (Babaei & Giudici, 2025) — Dual-component XAI framework using XGBoost + SHAP for credit risk and expected return estimation. [Expert Systems with Applications, 2025]
-- **Interpretable ML for Corporate Financialization** (Wang et al., 2025) — SHAP-enhanced framework revealing non-linear relationships between financial variables. [Mathematics, 2025]
-
----
 
 ## Contributing
 
