@@ -5,6 +5,7 @@
 ![Polars](https://img.shields.io/badge/Polars-CD792C?style=flat&logo=polars&logoColor=white)
 ![Plotly](https://img.shields.io/badge/Plotly-3F4F75?style=flat&logo=plotly&logoColor=white)
 ![Pydantic](https://img.shields.io/badge/Pydantic-E92063?style=flat&logo=pydantic&logoColor=white)
+![tests](https://img.shields.io/badge/tests-481%20passing-brightgreen?style=flat)
 
 **Long/Short Equity Portfolio Risk Workbench**
 
