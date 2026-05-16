@@ -252,6 +252,7 @@ def render() -> None:
         )
         if uploaded is not None:
             try:
+                import logging
                 import tempfile
 
                 ext = uploaded.name.split(".")[-1]
@@ -259,13 +260,37 @@ def render() -> None:
                     tmp.write(uploaded.getvalue())
                     tmp_path = tmp.name
                 nav = get_settings().get("nav", 3_000_000_000)
-                portfolio = load_from_excel(
-                    tmp_path,
-                    nav=nav,
-                    price_fetcher=get_cache().get_current_prices,
-                )
+
+                # Capture skip warnings emitted by ingest so we can surface them
+                # in the UI instead of letting them disappear to stderr.
+                skip_records: list[logging.LogRecord] = []
+
+                class _SkipCapture(logging.Handler):
+                    def emit(self, record: logging.LogRecord) -> None:
+                        if "skipping" in record.getMessage():
+                            skip_records.append(record)
+
+                ingest_logger = logging.getLogger("data.ingest")
+                handler = _SkipCapture(level=logging.WARNING)
+                ingest_logger.addHandler(handler)
+                try:
+                    portfolio = load_from_excel(
+                        tmp_path,
+                        nav=nav,
+                        price_fetcher=get_cache().get_current_prices,
+                    )
+                finally:
+                    ingest_logger.removeHandler(handler)
+
                 set_portfolio(portfolio)
                 st.success(f"Loaded {portfolio.total_count} positions from {uploaded.name}")
+                if skip_records:
+                    skipped = [r.args[0] if r.args else r.getMessage() for r in skip_records]
+                    st.warning(
+                        f"{len(skipped)} position(s) skipped — missing price data "
+                        f"(common for foreign listings): {', '.join(map(str, skipped[:8]))}"
+                        + (f", +{len(skipped) - 8} more" if len(skipped) > 8 else "")
+                    )
                 st.rerun()
             except Exception as e:
                 st.error(f"Failed to load: {e}")

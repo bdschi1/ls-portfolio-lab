@@ -88,6 +88,25 @@ class TestMultiTabDiscovery:
         assert intc.shares == pytest.approx(35_000_000 / 30.0)
         assert intc.side == "SHORT"
 
+    def test_dollar_m_preserves_fetched_price_as_entry_price(self):
+        """Notional → shares conversion must store the fetched price on Position so
+        downstream exposure (shares × entry_price) reproduces the original $ notional.
+        Regression: prior to fix, entry_price fell back to the $1 placeholder and
+        gross exposure collapsed by a factor of price."""
+        prices = {"NVDA": 175.0, "INTC": 30.0}
+
+        portfolio = load_from_excel(
+            FIXTURES / "master_portfolio_dollarm.xlsx",
+            price_fetcher=lambda tickers: {t: prices.get(t, 0.0) for t in tickers},
+        )
+        nvda = portfolio.get_position("NVDA")
+        intc = portfolio.get_position("INTC")
+        assert nvda.entry_price == pytest.approx(175.0)
+        assert intc.entry_price == pytest.approx(30.0)
+        # shares × entry_price reproduces the original $40M / $35M notionals
+        assert nvda.shares * nvda.entry_price == pytest.approx(40_000_000)
+        assert intc.shares * intc.entry_price == pytest.approx(35_000_000)
+
     def test_dollar_m_without_price_fetcher_skips(self):
         """Without a price source and no entry_price, $-notional rows skip and ingest fails."""
         with pytest.raises(ValueError, match="No valid positions"):

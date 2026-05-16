@@ -445,6 +445,11 @@ def _parse_portfolio_df(
                 )
                 continue
             shares = notional / price  # sign preserved for side inference
+            # Preserve the resolved price so downstream exposure math (shares × entry_price)
+            # reproduces the original notional. Without this, entry_price falls back to the
+            # $1 placeholder and gross/net exposure collapses by a factor of price.
+            if entry_price <= 0:
+                entry_price = price
         elif has_weight and row.get("weight") is not None:
             weight = float(row["weight"]) * weight_scale
             shares = abs(weight) * nav / 100.0
