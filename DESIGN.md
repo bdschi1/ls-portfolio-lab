@@ -50,10 +50,9 @@ ls-portfolio-lab/
 │   ├── components/
 │   │   ├── portfolio_table.py         # Editable portfolio grid
 │   │   ├── metrics_panel.py           # Right-side metrics display
-│   │   ├── trade_input.py             # Trade entry form (batch up to 10)
-│   │   ├── impact_diff.py             # Before/after metrics comparison
-│   │   ├── chart_gallery.py           # Plotly visualizations
-│   │   └── settings_panel.py          # User customization controls
+│   │   └── chart_gallery.py           # Plotly visualizations
+│   │   # Trade entry, impact diff, and settings controls are inlined into
+│   │   # trade_simulator.py and main.py sidebar — no separate component files.
 │   └── state/
 │       ├── session.py                 # Streamlit session state management
 │       └── persistence.py             # Save/load portfolio snapshots
@@ -81,7 +80,7 @@ ls-portfolio-lab/
 │   ├── cache.py                       # Local SQLite cache for price/fundamental data
 │   ├── sector_map.py                 # GICS sector/subsector classification
 │   ├── universe.py                    # Ticker universe for mock portfolio generation
-│   └── ingest.py                      # Excel/PDF portfolio import
+│   └── ingest.py                      # CSV/Excel portfolio import
 │
 ├── history/                           # Paper portfolio tracking
 │   ├── __init__.py
@@ -168,8 +167,8 @@ Minimum required columns: Ticker, Side (LONG/SHORT), Shares or Weight.
 Optional: Entry Price, Entry Date, Sector Override.
 If no entry price → use current price. If no entry date → use today.
 
-**PDF:** Extract tables via `pdfplumber` (pattern from existing repos). Best-effort
-parsing with user confirmation before loading.
+PDF import was scoped but deferred — not implemented. CSV and Excel cover the
+import paths in use today.
 
 ---
 
@@ -733,7 +732,6 @@ All charts rendered via Plotly for interactivity.
 | **Cache** | SQLite (via polars or sqlite3) | Simple, file-based, no server needed |
 | **Optimization** | scipy.optimize | For mock portfolio weight optimization |
 | **Statistics** | numpy, scipy.stats | For regressions, VaR calculations |
-| **PDF Import** | pdfplumber | Consistent with existing repos |
 | **Excel Import** | polars (read_excel) or openpyxl | Native support |
 | **Testing** | pytest + pytest-cov | Consistent with existing repos |
 | **Linting** | Ruff (E, F, W, I) | Consistent with existing repos |
@@ -773,8 +771,7 @@ All charts rendered via Plotly for interactivity.
 21. `app/components/portfolio_table.py` — Sortable, filterable table
 22. `app/components/metrics_panel.py` — Right-side metrics display
 23. `app/components/chart_gallery.py` — All Plotly charts
-24. `app/components/settings_panel.py` — Customization controls
-25. `app/pages/trade_simulator.py` — Trade input + impact preview
+24. `app/pages/trade_simulator.py` — Trade input + impact preview (controls inlined)
 
 ### Phase 5: Paper Portfolio Mode
 26. `history/trade_log.py` — Append-only trade journal
@@ -786,11 +783,9 @@ All charts rendered via Plotly for interactivity.
 32. Tests for all history/performance modules
 
 ### Phase 6: Polish
-33. PDF import for portfolio files
-34. Export functionality (Excel, PDF report)
-35. Edge case handling (delistings, stock splits, missing data)
-36. Performance optimization (lazy loading, incremental metric updates)
-37. Documentation and README
+33. Edge case handling (delistings, stock splits, missing data)
+34. Performance optimization (lazy loading, incremental metric updates)
+35. Documentation and README
 
 ---
 
@@ -951,7 +946,87 @@ cache:
 
 ---
 
-## 17. WHAT THIS IS NOT
+## 17. WEALTH-MGMT + ADVANCED RISK SURFACE (Post-MVP Additions)
+
+The following modules and the `risk_analytics` page extend the workbench past the
+original MVP. They keep the same architectural rules — `core/` pure, `app/` UI
+only — and are exercised by the test suite (601 tests as of 2026-05-16).
+
+### 17.1 Wealth-management plugin (target-weights schema)
+
+The Streamlit app's primary rebalancer is `core/rebalancer.py` (SLSQP, net-beta
+and vol targets). The wealth-mgmt plugin speaks a different schema — *target
+weights with drift bands* — so a second engine runs alongside the optimizer.
+The plugin's prompts live under `.claude/skills/` and `.claude/commands/`:
+
+| Skill / command | Core module |
+|---|---|
+| `portfolio-rebalance` / `/rebalance` | `core/wealth_rebalance.py` |
+| `tax-loss-harvesting` / `/tlh` | `core/tlh.py` |
+| `client-report` / `/client-report` | `core/reporting.py` |
+| `client-review` / `/client-review` | (consumes the three above) |
+
+- **`core/wealth_rebalance.py`** — `TargetWeight(ticker, target_weight, band)` →
+  `compute_drift_rows()` → `build_basket()` returns a `TradeBasket` consumable
+  by `core/trade_impact.py`. Drift = current − target. Trade fires when
+  |drift| > band (default 50bps; plugin uses 3–5% for client books). Side flips
+  (LONG↔SHORT) are rejected with a warning — they require a manual two-step
+  rebalance to keep cost accounting clean. Baskets cap at 10 trades; the largest
+  |drift| names win.
+- **`core/tlh.py`** — L/S-aware tax-loss harvesting scanner. Returns a `TLHScan`
+  with candidates flagged short-term vs long-term and gated by the wash-sale
+  lookback (any same-ticker activity in the trade log within ±30 days blocks the
+  proposal). `check_reentry_blocked()` gates a proposed re-entry against the
+  same window. **IRC §1259 short-against-the-box** is documented but not
+  enforced here: `Portfolio` already rejects duplicate tickers, so a single
+  portfolio cannot hold both a long and a short on the same name. Cross-book
+  §1259 belongs at a multi-portfolio / proposal-time layer if and when that
+  ships.
+- **`core/reporting.py`** — `render_client_report()` produces a markdown
+  snapshot tailored to an L/S book (exposure summary, sector long/short net,
+  top holdings on both legs, optional performance + risk blocks). Pure
+  function; no Streamlit imports. Disclosures appended.
+
+### 17.2 Advanced risk surface (`app/pages/risk_analytics.py`)
+
+A fifth Streamlit page driven by four new metric modules under `core/metrics/`.
+The page is structured as five "one-question-per-glance" blocks; all heavy
+lifting sits in `core/metrics/`.
+
+| Module | Public API | Question answered |
+|---|---|---|
+| `core/metrics/variance_decomp.py` | `variance_decomposition()` → `VarianceDecomposition` | Where is portfolio variance coming from? (market / style / sector / idio) |
+| `core/metrics/style_tilts.py` | `style_tilts()` → `StyleTiltsReport` | Which factor/sector bets am I making vs. target / benchmark? |
+| `core/metrics/risk_contributions.py` | `per_name_risk_contributions()` → `list[NameRiskContrib]` | Which names contribute most to portfolio vol, and what is α/idio per name? |
+| `core/metrics/factor_attribution.py` | `factor_pnl_attribution()` → `FactorAttribution` | Where did this period's P&L actually come from? |
+
+Implementation notes:
+
+- All four modules are Polars-in / numpy-core / dataclass-out. No pandas, no
+  Streamlit imports.
+- MCTR / CCTR follow the standard Euler decomposition of portfolio variance:
+  `MCTR_i = (Σw)_i / σ_p`, `CCTR_i = w_i · MCTR_i`, and `Σ_i CCTR_i = σ_p` by
+  construction. Annualization is `× √252` throughout.
+- `risk_contributions.py` documents a divide-by-zero policy:
+  `alpha_over_idio` returns 0.0 (not NaN) when `idio_vol_ann ≤ 1e-10`, so
+  downstream sort/rank operations don't have to filter.
+- `variance_decomp.py` maps user-supplied factor labels (`MKT`, `SMB`, `HML`,
+  `MOM`, `UMD`, `MOMENTUM`) onto the canonical keys used by
+  `core/factor_model.multi_factor_regression()`.
+- `factor_attribution.py` reconciles realized $ P&L against
+  market + style + sector + idio within a tolerance and logs a warning when it
+  doesn't tie.
+
+### 17.3 CI gate
+
+`.github/workflows/ci.yml` runs `pytest --collect-only -q` before the full
+suite. The collect-only pass fails fast on import breaks, dramatically
+shortening the feedback loop when a refactor renames a symbol that the test
+suite still imports.
+
+---
+
+## 18. WHAT THIS IS NOT
 
 To be very explicit about scope boundaries:
 

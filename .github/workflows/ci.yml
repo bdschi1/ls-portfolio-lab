@@ -26,6 +26,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
 
+      - name: Verify test collection (fast import-break gate)
+        run: |
+          pytest --collect-only -q
+
       - name: Run tests with coverage
         run: |
           pytest tests/ -v --tb=short --cov=core --cov=data --cov=history --cov-fail-under=75

@@ -5,7 +5,7 @@
 ![Polars](https://img.shields.io/badge/Polars-CD792C?style=flat&logo=polars&logoColor=white)
 ![Plotly](https://img.shields.io/badge/Plotly-3F4F75?style=flat&logo=plotly&logoColor=white)
 ![Pydantic](https://img.shields.io/badge/Pydantic-E92063?style=flat&logo=pydantic&logoColor=white)
-![tests](https://img.shields.io/badge/tests-481%20passing-brightgreen?style=flat)
+![tests](https://img.shields.io/badge/tests-601%20passing-brightgreen?style=flat)
 
 **Long/Short Equity Portfolio Risk Workbench**
 
@@ -73,12 +73,21 @@ Copy `.env.example` to `.env` and uncomment as needed. No API keys required for 
 
 *In plain language: the dashboard shows where your risk is concentrated, how diversified the portfolio is, and whether the long and short books are behaving as expected.*
 
-#### 2. Trade Simulator
+#### 2. Risk Analytics
+- **Variance decomposition:** factor vs idiosyncratic share of total portfolio variance
+- **Style + sector tilts:** active style exposures (size/value/momentum) and sector deviations vs benchmark
+- **Per-name risk contributions:** marginal contribution to risk with the alpha/idio-vol sizing yardstick
+- **Factor-decomposed P&L attribution:** how much of recent P&L came from market/size/value/momentum vs alpha
+- **Trade-simulator deep link:** one-line impact preview for any flagged position
+
+*One question per glance: am I being paid for the bets I meant to make, or for bets I didn't know I had?*
+
+#### 3. Trade Simulator
 - Model up to 10 trades per basket (BUY, SHORT, ADD, REDUCE, SELL, COVER, EXIT)
 - Supports equities, ETFs, and options with delta adjustment
 - Full before/after metric comparison with limit warnings — then apply or discard
 
-#### 3. Paper Portfolio
+#### 4. Paper Portfolio
 - Toggle Paper Mode ON in the sidebar to start tracking
 - Immutable JSONL trade journal — every applied trade logged with timestamp
 - Daily NAV snapshots with positions, exposures, and P&L
@@ -86,7 +95,7 @@ Copy `.env.example` to `.env` and uncomment as needed. No API keys required for 
 - Closed trade summary with hit rate and slugging %
 - Persists to disk — survives app restarts
 
-#### 4. PM Scorecard
+#### 5. PM Scorecard
 - Hit rate, slugging %, expected value per trade
 - Long vs. short breakdown with separate hit rate and slugging
 - Sector skill table (hit rate, slugging, total P&L per sector)
@@ -101,15 +110,19 @@ Copy `.env.example` to `.env` and uncomment as needed. No API keys required for 
 │  Load or generate portfolio                               │
 └───────────────────────────────┬───────────────────────────┘
                                 ▼
-┌─ PAGE 2 ── Trade Simulator ──────────────────────────────┐
+┌─ PAGE 2 ── Risk Analytics ───────────────────────────────┐
+│  Variance decomp, tilts, per-name MCTR, P&L attribution   │
+└───────────────────────────────┬───────────────────────────┘
+                                ▼
+┌─ PAGE 3 ── Trade Simulator ──────────────────────────────┐
 │  Propose trades, preview impact, apply or discard         │
 └───────────────────────────────┬───────────────────────────┘
                                 ▼
-┌─ PAGE 3 ── Paper Portfolio ──────────────────────────────┐
+┌─ PAGE 4 ── Paper Portfolio ──────────────────────────────┐
 │  Toggle ON first · trade journal + NAV · daily snapshots  │
 └───────────────────────────────┬───────────────────────────┘
                                 ▼
-┌─ PAGE 4 ── PM Scorecard ────────────────────────────────┐
+┌─ PAGE 5 ── PM Scorecard ────────────────────────────────┐
 │  Hit rate, slugging %, sector skill (needs trades)        │
 └──────────────────────────────────────────────────────────┘
 ```
@@ -211,14 +224,14 @@ ls-portfolio-lab/
 │   ├── cache.py                      # SQLite cache — 18hr price staleness, 7d info staleness
 │   ├── universe.py                   # ~440 Russell 1000 tickers (market cap > $5B)
 │   ├── sector_map.py                 # GICS sector/subsector classification + ETF detection
-│   └── ingest.py                     # Portfolio parser — CSV, Excel, PDF extraction
+│   └── ingest.py                     # Portfolio parser — CSV, Excel
 │
 ├── history/                          # Paper portfolio persistence (append-only)
 │   ├── trade_log.py                  # JSONL trade journal — immutable, timestamped records
 │   ├── snapshot.py                   # Daily snapshots — NAV, positions, sector exposures
 │   └── performance.py                # Time-weighted return, PM scorecard generation
 │
-└── tests/                            # 481 tests (pytest)
+└── tests/                            # 601 tests (pytest)
 ```
 
 ### Tech Stack
@@ -232,7 +245,7 @@ ls-portfolio-lab/
 | **Optimization** | SciPy (SLSQP) |
 | **Statistics** | NumPy, SciPy |
 | **Persistence** | SQLite (cache), JSONL (trade log, snapshots) |
-| **Testing** | pytest (481 tests), pytest-cov |
+| **Testing** | pytest (601 tests), pytest-cov |
 | **Linting** | Ruff |
 | **Python** | 3.12+ |
 
@@ -242,7 +255,7 @@ ls-portfolio-lab/
 
 ```bash
 source .venv/bin/activate
-pytest tests/ -v               # Run all 481 tests
+pytest tests/ -v               # Run all 601 tests
 pytest tests/ -v --cov=core    # With coverage report
 make lint                      # Ruff linting
 make fmt                       # Auto-format
@@ -255,7 +268,6 @@ make fmt                       # Auto-format
 - Bailey, D.H. & Lopez de Prado, M. (2014). The Deflated Sharpe Ratio: Correcting for Selection Bias, Backtest Overfitting, and Non-Normality. *Journal of Portfolio Management*, 40(5), 94-107.
 - Bailey, D.H. & Lopez de Prado, M. (2014). The Sharpe Ratio Efficient Frontier. *Algorithmic Finance*, 3(1-2), 99-109. [DOI](https://doi.org/10.3233/AF-140035)
 - Lo, A. (2002). The Statistics of Sharpe Ratios. *Financial Analysts Journal*, 58(4), 36-52.
-- Paleologo, G. (2024). *The Elements of Quantitative Investing*. Insight 4.2: Precision Matrix and Partial Correlations.
 - Fama, E.F. & French, K.R. (1993). *Journal of Financial Economics*, 33(1), 3-56.
 - Carhart, M.M. (1997). *The Journal of Finance*, 52(1), 57-82.
 

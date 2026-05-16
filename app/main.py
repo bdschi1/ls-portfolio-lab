@@ -16,7 +16,13 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-from app.pages import paper_portfolio, pm_scorecard, portfolio_view, trade_simulator  # noqa: E402
+from app.pages import (  # noqa: E402
+    paper_portfolio,
+    pm_scorecard,
+    portfolio_view,
+    risk_analytics,
+    trade_simulator,
+)
 from app.state.session import init_session_state  # noqa: E402
 
 # Initialize session state
@@ -30,7 +36,8 @@ def main() -> None:
     with st.sidebar:
         # --- Sidebar CSS: bigger nav fonts (+3), bigger body fonts (+2),
         #     compressed spacing between sections ---
-        st.markdown("""<style>
+        st.markdown(
+            """<style>
         /* --- Navigation radio: bigger font --- */
         section[data-testid="stSidebar"] div[role="radiogroup"] label p {
             font-size: clamp(13px, 1.0vw, 19px) !important;
@@ -87,7 +94,9 @@ def main() -> None:
             margin-bottom: 0.3rem;
             line-height: 1.3;
         }
-        </style>""", unsafe_allow_html=True)
+        </style>""",
+            unsafe_allow_html=True,
+        )
 
         st.title("📊 LS Portfolio Lab")
         st.caption("Long/Short Equity Risk Workbench")
@@ -355,8 +364,6 @@ Bailey, D.H. & Lopez de Prado, M. (2014). "The Sharpe Ratio Efficient Frontier."
 
 Lo, A. (2002). "The Statistics of Sharpe Ratios." *Financial Analysts Journal*, 58(4), 36-52. — SR standard error, PSR, MinTRL.
 
-Paleologo, G. (2024). *The Elements of Quantitative Investing*, Insight 4.2. — Partial correlations via precision matrix.
-
 Fama, E.F. & French, K.R. (1993). *Journal of Financial Economics*, 33(1), 3-56. — FF3 model.
 
 Carhart, M.M. (1997). *The Journal of Finance*, 52(1), 57-82. — Momentum (FF4).
@@ -375,6 +382,7 @@ Carhart, M.M. (1997). *The Journal of Finance*, 52(1), 57-82. — Momentum (FF4)
         # Navigation with descriptions
         _PAGE_INFO = {
             "Portfolio": "Live risk dashboard — metrics, charts, positions",
+            "Risk Analytics": "Factor/idio risk, tilts, per-name MCTR, P&L attribution",
             "Trade Simulator": "Model trades and preview impact before executing",
             "Paper Portfolio": "Track trades and build a performance record",
             "PM Scorecard": "Hit rate, slugging %, attribution from paper trades",
@@ -419,8 +427,13 @@ Carhart, M.M. (1997). *The Journal of Finance*, 52(1), 57-82. — Momentum (FF4)
             "Lookback (trading days)",
             options=[63, 126, 252, 504, 756],
             index=[63, 126, 252, 504, 756].index(settings.get("lookback_days", 252)),
-            format_func=lambda x: {63: "3M (63d)", 126: "6M (126d)", 252: "1Y (252d)",
-                                     504: "2Y (504d)", 756: "3Y (756d)"}[x],
+            format_func=lambda x: {
+                63: "3M (63d)",
+                126: "6M (126d)",
+                252: "1Y (252d)",
+                504: "2Y (504d)",
+                756: "3Y (756d)",
+            }[x],
         )
 
         settings["benchmark"] = st.text_input(
@@ -458,10 +471,16 @@ Carhart, M.M. (1997). *The Journal of Finance*, 52(1), 57-82. — Momentum (FF4)
             horizontal=True,
         )
         if rf_mode == "Manual":
-            settings["risk_free_rate"] = st.number_input(
-                "Rate (%)", min_value=0.0, max_value=20.0,
-                value=5.0, step=0.25,
-            ) / 100
+            settings["risk_free_rate"] = (
+                st.number_input(
+                    "Rate (%)",
+                    min_value=0.0,
+                    max_value=20.0,
+                    value=5.0,
+                    step=0.25,
+                )
+                / 100
+            )
         else:
             settings["risk_free_rate"] = "auto"
 
@@ -486,7 +505,7 @@ Carhart, M.M. (1997). *The Journal of Finance*, 52(1), 57-82. — Momentum (FF4)
                 index=avail.index(current_source) if current_source in avail else 0,
                 key="data_source_select",
                 help="Switch the market data provider. Bloomberg and IB require "
-                     "their respective software running locally.",
+                "their respective software running locally.",
             )
             # Show description
             desc = PROVIDER_DESCRIPTIONS.get(source, "")
@@ -508,22 +527,31 @@ Carhart, M.M. (1997). *The Journal of Finance*, 52(1), 57-82. — Momentum (FF4)
         with st.expander("🚨 Alert Thresholds"):
             alerts = st.session_state.alerts
             alerts["max_sector_net_exposure"] = st.slider(
-                "Max Sector Net Exposure", 0.1, 1.0,
+                "Max Sector Net Exposure",
+                0.1,
+                1.0,
                 value=alerts.get("max_sector_net_exposure", 0.50),
-                step=0.05, format="%.0f%%",
+                step=0.05,
+                format="%.0f%%",
             )
             alerts["max_net_beta"] = st.slider(
-                "Max Net Beta", 0.0, 0.5,
+                "Max Net Beta",
+                0.0,
+                0.5,
                 value=alerts.get("max_net_beta", 0.30),
                 step=0.05,
             )
             alerts["min_net_beta"] = st.slider(
-                "Min Net Beta", -0.5, 0.0,
+                "Min Net Beta",
+                -0.5,
+                0.0,
                 value=alerts.get("min_net_beta", -0.10),
                 step=0.05,
             )
             alerts["max_gross_exposure"] = st.slider(
-                "Max Gross Exposure", 1.0, 4.0,
+                "Max Gross Exposure",
+                1.0,
+                4.0,
                 value=alerts.get("max_gross_exposure", 2.50),
                 step=0.1,
             )
@@ -531,6 +559,8 @@ Carhart, M.M. (1997). *The Journal of Finance*, 52(1), 57-82. — Momentum (FF4)
     # --- Main Content ---
     if page == "Portfolio":
         portfolio_view.render()
+    elif page == "Risk Analytics":
+        risk_analytics.render()
     elif page == "Trade Simulator":
         trade_simulator.render()
     elif page == "Paper Portfolio":

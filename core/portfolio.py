@@ -33,6 +33,10 @@ class Position(BaseModel):
     subsector: str = ""
     market_cap: float = 0.0  # in USD
 
+    # Optional user-supplied risk/technical overrides (carried but not consumed by metric modules)
+    rsi: float | None = None
+    beta: float | None = None
+
     # Asset type classification
     asset_type: Literal["EQUITY", "ETF", "OPTION"] = "EQUITY"
 
@@ -385,10 +389,12 @@ class Portfolio(BaseModel):
             )
 
         new_positions = [*self.positions, position]
-        return self.model_copy(update={
-            "positions": new_positions,
-            "cash": new_cash,
-        })
+        return self.model_copy(
+            update={
+                "positions": new_positions,
+                "cash": new_cash,
+            }
+        )
 
     def remove_position(self, ticker: str) -> Portfolio:
         """Return a new portfolio with the position removed. Cash is returned."""
@@ -398,10 +404,12 @@ class Portfolio(BaseModel):
             msg = f"Position {ticker} not found."
             raise ValueError(msg)
         returned_cash = removed.notional if removed else 0.0
-        return self.model_copy(update={
-            "positions": new_positions,
-            "cash": (self.cash or 0.0) + returned_cash,
-        })
+        return self.model_copy(
+            update={
+                "positions": new_positions,
+                "cash": (self.cash or 0.0) + returned_cash,
+            }
+        )
 
     def update_position(self, ticker: str, **kwargs: object) -> Portfolio:
         """Return a new portfolio with the specified position fields updated."""

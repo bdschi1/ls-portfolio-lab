@@ -175,10 +175,6 @@ def partial_correlation_matrix(
     entries naturally weight the portfolio. Partial correlations show
     which assets provide independent diversification.
 
-    Reference:
-        Paleologo, G. (2024). The Elements of Quantitative Investing.
-        Insight 4.2, p. 110: Precision Matrix and Partial Correlations.
-
     Returns (n, n) numpy partial correlation matrix.
     Diagonal elements are 1.0 (self-partial-correlation).
     """
@@ -227,9 +223,6 @@ def most_partially_correlated_pairs(
     These are the pairs with the strongest direct relationship
     after controlling for all other assets — useful for identifying
     redundant positions that aren't diversifying.
-
-    Reference:
-        Paleologo (2024), Insight 4.2.
     """
     available = [t for t in tickers if t in returns_df.columns]
     pcorr = partial_correlation_matrix(returns_df, available)

@@ -103,7 +103,7 @@ class TestAveragePairwise:
         assert abs(avg) < 0.10  # should be near zero
 
 
-# --- Partial correlation tests (Paleologo Insight 4.2) ---
+# --- Partial correlation tests ---
 
 
 class TestPartialCorrelation:

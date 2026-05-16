@@ -62,12 +62,17 @@ def _weighted_rsi(
     valid_notional = 0.0
 
     for p in positions:
-        if p.ticker in returns_df.columns:
+        # Imported RSI (from upload) wins over computed
+        if p.rsi is not None:
+            rsi_val = p.rsi
+        elif p.ticker in returns_df.columns:
             rets = returns_df[p.ticker]
             price_series = (1 + rets).cum_prod() * 100
             rsi_val = technical_metrics.rsi_current(price_series, rsi_period)
-            weighted_sum += rsi_val * p.notional
-            valid_notional += p.notional
+        else:
+            continue
+        weighted_sum += rsi_val * p.notional
+        valid_notional += p.notional
 
     if valid_notional == 0:
         return None

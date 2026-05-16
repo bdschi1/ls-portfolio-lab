@@ -107,16 +107,21 @@ def _refresh_market_data() -> None:
     for p in portfolio.positions:
         info = cache.get_ticker_info(p.ticker)
         from data.sector_map import classify_ticker
+
         sector, subsector = classify_ticker(
             p.ticker,
             yf_sector=info.get("sector", ""),
             yf_industry=info.get("industry", ""),
         )
-        new_positions.append(p.model_copy(update={
-            "sector": sector or p.sector,
-            "subsector": subsector or p.subsector,
-            "market_cap": info.get("market_cap", p.market_cap),
-        }))
+        new_positions.append(
+            p.model_copy(
+                update={
+                    "sector": sector or p.sector,
+                    "subsector": subsector or p.subsector,
+                    "market_cap": info.get("market_cap", p.market_cap),
+                }
+            )
+        )
     portfolio = portfolio.model_copy(update={"positions": new_positions})
     set_portfolio(portfolio)
 
@@ -236,7 +241,7 @@ def render() -> None:
     st.header("📊 Portfolio Dashboard")
 
     # --- Top action bar ---
-    col1, col2, col3, col4, col5 = st.columns([1, 1, 1, 1, 1])
+    col1, col2, col3, col4, col5, col6, col7 = st.columns([1, 1, 1, 1, 1, 1, 1])
 
     with col1:
         uploaded = st.file_uploader(
@@ -248,12 +253,17 @@ def render() -> None:
         if uploaded is not None:
             try:
                 import tempfile
-                ext = uploaded.name.split('.')[-1]
+
+                ext = uploaded.name.split(".")[-1]
                 with tempfile.NamedTemporaryFile(suffix=f".{ext}", delete=False) as tmp:
                     tmp.write(uploaded.getvalue())
                     tmp_path = tmp.name
                 nav = get_settings().get("nav", 3_000_000_000)
-                portfolio = load_from_excel(tmp_path, nav=nav)
+                portfolio = load_from_excel(
+                    tmp_path,
+                    nav=nav,
+                    price_fetcher=get_cache().get_current_prices,
+                )
                 set_portfolio(portfolio)
                 st.success(f"Loaded {portfolio.total_count} positions from {uploaded.name}")
                 st.rerun()
@@ -265,6 +275,7 @@ def render() -> None:
             with st.spinner("Generating mock portfolio..."):
                 cache = get_cache()
                 from data.universe import flat_universe
+
                 all_tickers = flat_universe()
                 prices = cache.get_current_prices(all_tickers)
 
@@ -306,6 +317,35 @@ def render() -> None:
                 portfolio = load_portfolio(saved[idx]["filepath"])
                 set_portfolio(portfolio)
                 st.rerun()
+
+    with col6:
+        if st.button(
+            "🔁 Reload",
+            use_container_width=True,
+            help="Recompute metrics from current portfolio (keeps loaded portfolio)",
+        ):
+            st.session_state.rebalance_result = None
+            st.session_state.rebalance_requested = False
+            st.session_state.returns_df = None
+            st.session_state.prices_df = None
+            st.session_state.betas = {}
+            st.rerun()
+
+    with col7:
+        if st.button(
+            "🧹 Reset",
+            use_container_width=True,
+            help="Clear loaded portfolio and session state (saved portfolios untouched)",
+        ):
+            set_portfolio(None)
+            st.session_state.rebalance_result = None
+            st.session_state.rebalance_requested = False
+            st.session_state.returns_df = None
+            st.session_state.prices_df = None
+            st.session_state.betas = {}
+            st.session_state.target_prices = {}
+            st.session_state.pop("portfolio_upload", None)
+            st.rerun()
 
     st.divider()
 

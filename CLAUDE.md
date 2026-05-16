@@ -30,7 +30,7 @@ make coverage
 ## Architecture
 - `app/` -- Streamlit application layer
   - `main.py` -- Entry point, sidebar, navigation, data source selector
-  - `pages/` -- One module per page: portfolio_view, trade_simulator, paper_portfolio, pm_scorecard
+  - `pages/` -- One module per page: portfolio_view, risk_analytics, trade_simulator, paper_portfolio, pm_scorecard
   - `components/` -- Reusable UI: metrics_panel, portfolio_table, chart_gallery (12+ Plotly charts)
   - `state/` -- Session state init and portfolio save/load (JSON persistence)
 - `core/` -- Pure business logic (no Streamlit imports)
@@ -45,7 +45,7 @@ make coverage
   - `yahoo_provider.py`, `bloomberg_provider.py`, `ib_provider.py` -- Concrete providers
   - `provider_factory.py` -- Registry, auto-discovery, `get_provider_safe()`
   - `cache.py` -- SQLite cache with staleness thresholds
-  - `ingest.py` -- Portfolio parser (CSV, Excel, PDF)
+  - `ingest.py` -- Portfolio parser (CSV, Excel)
 - `history/` -- Paper portfolio persistence (append-only JSONL trade log, daily snapshots, TWR performance)
 
 ## Key Patterns
@@ -54,10 +54,10 @@ make coverage
 - Provider abstraction: sidebar auto-detects installed providers (Yahoo default, Bloomberg, IB optional)
 - SQLite caching sits between providers and the app; cache keys are (ticker, date_range, field)
 - Paper portfolio uses immutable JSONL for trade journal -- append-only, never edited
-- Page workflow: Dashboard -> Trade Simulator -> Paper Portfolio -> PM Scorecard
+- Page workflow: Dashboard -> Risk Analytics -> Trade Simulator -> Paper Portfolio -> PM Scorecard
 
 ## Testing Conventions
-- 481 tests in `tests/` with a `test_metrics/` subdirectory for per-module metric tests
+- 601 tests in `tests/` with a `test_metrics/` subdirectory for per-module metric tests
 - Tests use mock/synthetic data -- no live API calls
 - Run with `pytest tests/ -v` or `make test`
 - `pyproject.toml` sets `pythonpath = ["."]` so imports resolve without install

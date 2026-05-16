@@ -119,12 +119,16 @@ def render_portfolio_table(portfolio: Portfolio) -> None:
         if sector_filter != "All" and p.sector != sector_filter:
             continue
 
-        beta = betas.get(p.ticker, 1.0)
+        # Beta: imported value (from upload) wins over computed; fall back to 1.0
+        if p.beta is not None:
+            beta = p.beta
+        else:
+            beta = betas.get(p.ticker, 1.0)
         weight = p.weight_in(portfolio.nav) * 100  # as percentage
 
-        # RSI — compute if we have price data
-        rsi_val = None
-        if returns_df is not None and p.ticker in returns_df.columns:
+        # RSI: imported value (from upload) wins over computed
+        rsi_val = p.rsi
+        if rsi_val is None and returns_df is not None and p.ticker in returns_df.columns:
             rets = returns_df[p.ticker]
             price_series = (1 + rets).cum_prod() * 100
             rsi_val = technical_metrics.rsi_current(price_series, rsi_period)
