@@ -88,6 +88,22 @@ class TestMultiTabDiscovery:
         assert intc.shares == pytest.approx(35_000_000 / 30.0)
         assert intc.side == "SHORT"
 
+    def test_dollar_m_populates_current_price_for_notional(self):
+        """Position.notional uses current_price (not entry_price). Without setting
+        current_price during ingest, gross/net exposure collapsed to $0 across all
+        uploaded portfolios. Regression for the silent zero-exposure bug."""
+        prices = {"NVDA": 175.0, "INTC": 30.0}
+        portfolio = load_from_excel(
+            FIXTURES / "master_portfolio_dollarm.xlsx",
+            price_fetcher=lambda tickers: {t: prices.get(t, 0.0) for t in tickers},
+        )
+        nvda = portfolio.get_position("NVDA")
+        intc = portfolio.get_position("INTC")
+        # Notional must reproduce the original $40M / $35M, not $0
+        assert nvda.notional == pytest.approx(40_000_000)
+        assert intc.notional == pytest.approx(35_000_000)
+        assert portfolio.gross_notional == pytest.approx(75_000_000)
+
     def test_dollar_m_preserves_fetched_price_as_entry_price(self):
         """Notional → shares conversion must store the fetched price on Position so
         downstream exposure (shares × entry_price) reproduces the original $ notional.

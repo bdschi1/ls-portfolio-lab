@@ -376,7 +376,6 @@ def _parse_portfolio_df(
     has_shares = "shares" in df.columns
     has_weight = "weight" in df.columns
     has_notional = "notional_usd" in df.columns
-    has_entry_price = "entry_price" in df.columns
     has_rsi = "rsi" in df.columns
     has_beta = "beta" in df.columns
 
@@ -401,16 +400,20 @@ def _parse_portfolio_df(
     entry_price_scale = column_scales.get("entry_price", 1.0)
     weight_scale = column_scales.get("weight", 1.0)
 
-    # If we need prices to convert notional → shares, batch-fetch them once
+    # Always batch-fetch current prices when a fetcher is available. We need them
+    # for two things: (1) converting $-notional → shares when no shares column is
+    # supplied, and (2) populating Position.current_price so notional / gross /
+    # net / market-value math actually has a price to multiply shares by. Without
+    # this, current_price defaults to 0.0 and every downstream exposure metric
+    # collapses to zero — even when shares + entry_price are both present.
     fetched_prices: dict[str, float] = {}
-    if has_notional and not has_shares and not has_entry_price and price_fetcher is not None:
+    if price_fetcher is not None:
         tickers_needing_prices = sorted(
             {
                 _clean_ticker(str(row["ticker"]))
                 for row in df.iter_rows(named=True)
                 if row.get("ticker") is not None
                 and not (isinstance(row.get("ticker"), str) and not row["ticker"].strip())
-                and row.get("notional_usd") is not None
             }
         )
         if tickers_needing_prices:
@@ -500,12 +503,18 @@ def _parse_portfolio_df(
         rsi_clean = float(rsi_val) if rsi_val is not None and rsi_val != "" else None
         beta_clean = float(beta_val) if beta_val is not None and beta_val != "" else None
 
+        # Current price: prefer freshly fetched, then entry_price, then $1 placeholder
+        current_price = fetched_prices.get(ticker, 0.0)
+        if current_price <= 0:
+            current_price = entry_price if entry_price > 0 else 1.0
+
         positions.append(
             Position(
                 ticker=ticker,
                 side=side,
                 shares=shares,
-                entry_price=entry_price if entry_price > 0 else 1.0,  # placeholder
+                entry_price=entry_price if entry_price > 0 else current_price,
+                current_price=current_price,
                 entry_date=entry_date,
                 sector=sector,
                 subsector=subsector,
