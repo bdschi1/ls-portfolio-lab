@@ -767,19 +767,19 @@ All charts rendered via Plotly for interactivity.
 
 ### Phase 4: Streamlit UI
 19. `app/main.py` — Layout, navigation, session state
-20. `app/pages/portfolio_view.py` — Main dashboard
+20. `app/views/portfolio_view.py` — Main dashboard
 21. `app/components/portfolio_table.py` — Sortable, filterable table
 22. `app/components/metrics_panel.py` — Right-side metrics display
 23. `app/components/chart_gallery.py` — All Plotly charts
-24. `app/pages/trade_simulator.py` — Trade input + impact preview (controls inlined)
+24. `app/views/trade_simulator.py` — Trade input + impact preview (controls inlined)
 
 ### Phase 5: Paper Portfolio Mode
 26. `history/trade_log.py` — Append-only trade journal
 27. `history/snapshot.py` — Daily snapshots
 28. `history/performance.py` — TWR, P&L calculations
 29. `core/metrics/pm_performance.py` — Hit rate, slugging, sector skill, DD analysis
-30. `app/pages/paper_portfolio.py` — History view
-31. `app/pages/pm_scorecard.py` — PM analytics dashboard
+30. `app/views/paper_portfolio.py` — History view
+31. `app/views/pm_scorecard.py` — PM analytics dashboard
 32. Tests for all history/performance modules
 
 ### Phase 6: Polish
@@ -987,7 +987,7 @@ The plugin's prompts live under `.claude/skills/` and `.claude/commands/`:
   top holdings on both legs, optional performance + risk blocks). Pure
   function; no Streamlit imports. Disclosures appended.
 
-### 17.2 Advanced risk surface (`app/pages/risk_analytics.py`)
+### 17.2 Advanced risk surface (`app/views/risk_analytics.py`)
 
 A fifth Streamlit page driven by four new metric modules under `core/metrics/`.
 The page is structured as five "one-question-per-glance" blocks; all heavy

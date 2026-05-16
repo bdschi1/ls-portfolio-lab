@@ -13,7 +13,7 @@ import numpy as np
 import polars as pl
 import pytest
 
-from app.pages.risk_analytics import (
+from app.views.risk_analytics import (
     _SECTOR_ETFS,
     _SPY_SECTOR_BENCHMARK,
     _build_factor_returns,

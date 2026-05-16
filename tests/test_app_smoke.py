@@ -13,11 +13,11 @@ import importlib
 import pytest
 
 _PAGE_MODULES = [
-    "app.pages.portfolio_view",
-    "app.pages.risk_analytics",
-    "app.pages.trade_simulator",
-    "app.pages.paper_portfolio",
-    "app.pages.pm_scorecard",
+    "app.views.portfolio_view",
+    "app.views.risk_analytics",
+    "app.views.trade_simulator",
+    "app.views.paper_portfolio",
+    "app.views.pm_scorecard",
 ]
 
 _COMPONENT_MODULES = [

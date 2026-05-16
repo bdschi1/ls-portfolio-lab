@@ -16,14 +16,14 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-from app.pages import (  # noqa: E402
+from app.state.session import init_session_state  # noqa: E402
+from app.views import (  # noqa: E402
     paper_portfolio,
     pm_scorecard,
     portfolio_view,
     risk_analytics,
     trade_simulator,
 )
-from app.state.session import init_session_state  # noqa: E402
 
 # Initialize session state
 init_session_state()
