@@ -1,286 +1,47 @@
-# LS Portfolio Lab
+<!-- ls-portfolio-lab/README.md | Last updated: 2026-06-13 -->
+
+# LSLab — Long/Short Equity Risk Workbench
 
 ![Python](https://img.shields.io/badge/python-3.12+-3776AB?style=flat&logo=python&logoColor=white)
 ![Streamlit](https://img.shields.io/badge/Streamlit-FF4B4B?style=flat&logo=streamlit&logoColor=white)
-![Polars](https://img.shields.io/badge/Polars-CD792C?style=flat&logo=polars&logoColor=white)
-![Plotly](https://img.shields.io/badge/Plotly-3F4F75?style=flat&logo=plotly&logoColor=white)
-![Pydantic](https://img.shields.io/badge/Pydantic-E92063?style=flat&logo=pydantic&logoColor=white)
 ![tests](https://img.shields.io/badge/tests-601%20passing-brightgreen?style=flat)
 
-**Long/Short Equity Portfolio Risk Workbench**
+Streamlit dashboard for monitoring and stress-testing long/short equity portfolios. Computes risk, return, and exposure metrics across long + short books, simulates proposed trades with before/after impact, and tracks paper-portfolio performance over time.
 
-A Streamlit-based dashboard for monitoring and stress-testing long/short equity portfolios. It computes risk, return, and exposure metrics across a portfolio of long and short stock positions, lets you simulate proposed trades and see their impact before executing, and tracks paper portfolio performance over time.
+**Plain English:** A risk-management tool, not a signal generator. It answers: what happens to my risk profile if I add this trade, and how concentrated am I across sectors, factors, and individual names?
 
-This is a risk management tool, not a signal generator. It answers the question: *"What happens to my risk profile if I add this trade?"*
+## Install
 
-This is a continually developed project. Features, interfaces, and test coverage expand over time as new research ideas and workflow needs arise.
-
-**Key questions this project answers:**
-- *What happens to my risk profile if I add this trade?*
-- *How concentrated is my portfolio across sectors, factors, and individual names?*
-
----
-
-## Quick Start
-
-```bash
-git clone https://github.com/bdschi1/ls-portfolio-lab.git && cd ls-portfolio-lab
-./run.sh            # setup + launch Streamlit app
 ```
-
-Or manually:
-
-```bash
-python -m venv .venv && source .venv/bin/activate
+python -m venv venv && source venv/bin/activate
 pip install -e ".[dev]"
-streamlit run app/main.py
+pip install -e ".[bloomberg]"   # or .[ib] (optional)
 ```
 
-Run `./run.sh help` for all commands (`setup`, `app`, `test`).
+Copy `.env.example` to `.env` and fill in only what you need; no keys required for basic operation.
 
-Open `http://localhost:8501`. Generate a mock portfolio or upload your own (CSV/Excel).
-
-### Optional Provider Install
-
-```bash
-pip install -e ".[bloomberg]"    # Bloomberg Professional API
-pip install -e ".[ib]"           # Interactive Brokers
-pip install -e ".[dev,bloomberg,ib]"  # Everything
-```
-
-### Environment Variables
-
-Copy `.env.example` to `.env` and uncomment as needed. No API keys required for basic operation.
-
-| Category | Variables |
-|----------|-----------|
-| **Config** | `LS_CONFIG_PATH` |
-| **Bloomberg** | `BLOOMBERG_HOST`, `BLOOMBERG_PORT` |
-| **Interactive Brokers** | `IB_HOST`, `IB_PORT`, `IB_CLIENT_ID` |
-
----
-
-## How It Works
-
-### Pages
-
-#### 1. Portfolio Dashboard
-- **Top metrics bar:** Portfolio Vol, Net Beta, Sharpe, weighted RSI, Gross/Net exposure, Cash %, Time in Drawdown, Quality Score (0-100)
-- **Detail grid:** Summary (NAV, L/S ratio, HHI), Risk (Sortino, VaR, CVaR, DSR), Drawdown (max DD, current DD, Calmar, expected DD, time in DD), Factors (CAPM/FF3/FF4 alpha, beta, systematic %, factor tilts), Correlation (pairwise, long book, short book, L/S correlation, idiosyncratic %)
-- **Position table:** Filterable by side/sector, 20+ columns including annualized vol, beta, RSI, ADV$ (20-day average dollar volume), alpha, P&L, weight
-- **Charts:** Sector exposure, beta scatter, risk contribution, RSI heatmap, correlation matrix, NAV curve, drawdown, P&L waterfall, sector P&L, dispersion, quality score radar, rolling metrics
-- **Rebalancer:** Constrained optimizer targeting net beta and annualized volatility
-
-*In plain language: the dashboard shows where your risk is concentrated, how diversified the portfolio is, and whether the long and short books are behaving as expected.*
-
-#### 2. Risk Analytics
-- **Variance decomposition:** factor vs idiosyncratic share of total portfolio variance
-- **Style + sector tilts:** active style exposures (size/value/momentum) and sector deviations vs benchmark
-- **Per-name risk contributions:** marginal contribution to risk with the alpha/idio-vol sizing yardstick
-- **Factor-decomposed P&L attribution:** how much of recent P&L came from market/size/value/momentum vs alpha
-- **Trade-simulator deep link:** one-line impact preview for any flagged position
-
-*One question per glance: am I being paid for the bets I meant to make, or for bets I didn't know I had?*
-
-#### 3. Trade Simulator
-- Model up to 10 trades per basket (BUY, SHORT, ADD, REDUCE, SELL, COVER, EXIT)
-- Supports equities, ETFs, and options with delta adjustment
-- Full before/after metric comparison with limit warnings — then apply or discard
-
-#### 4. Paper Portfolio
-- Toggle Paper Mode ON in the sidebar to start tracking
-- Immutable JSONL trade journal — every applied trade logged with timestamp
-- Daily NAV snapshots with positions, exposures, and P&L
-- NAV curve, exposure evolution, and beta history charts
-- Closed trade summary with hit rate and slugging %
-- Persists to disk — survives app restarts
-
-#### 5. PM Scorecard
-- Hit rate, slugging %, expected value per trade
-- Long vs. short breakdown with separate hit rate and slugging
-- Sector skill table (hit rate, slugging, total P&L per sector)
-- NAV curve with drawdown shading, drawdown behavior metrics
-
-*Hit rate is the fraction of trades that made money. Slugging % is the average winner divided by the average loser — it measures how much you make when you're right relative to how much you lose when you're wrong.*
-
-### Page Workflow
+## Usage
 
 ```
-┌─ PAGE 1 ── Portfolio Dashboard ──────────────────────────┐
-│  Load or generate portfolio                               │
-└───────────────────────────────┬───────────────────────────┘
-                                ▼
-┌─ PAGE 2 ── Risk Analytics ───────────────────────────────┐
-│  Variance decomp, tilts, per-name MCTR, P&L attribution   │
-└───────────────────────────────┬───────────────────────────┘
-                                ▼
-┌─ PAGE 3 ── Trade Simulator ──────────────────────────────┐
-│  Propose trades, preview impact, apply or discard         │
-└───────────────────────────────┬───────────────────────────┘
-                                ▼
-┌─ PAGE 4 ── Paper Portfolio ──────────────────────────────┐
-│  Toggle ON first · trade journal + NAV · daily snapshots  │
-└───────────────────────────────┬───────────────────────────┘
-                                ▼
-┌─ PAGE 5 ── PM Scorecard ────────────────────────────────┐
-│  Hit rate, slugging %, sector skill (needs trades)        │
-└──────────────────────────────────────────────────────────┘
+streamlit run app/main.py --server.port=8516
+./run.sh                  # setup + launch (run.sh help for all commands)
 ```
 
-**Paper Portfolio** and **PM Scorecard** require:
-1. Paper Mode toggled ON in the sidebar
-2. Trades applied through the Trade Simulator
-3. Daily snapshots taken on the Paper Portfolio page
+## What it does
 
-### Data Providers
+- 5 pages: Portfolio Dashboard, Risk Analytics, Trade Simulator, Paper Portfolio, PM Scorecard
+- Paper Mode starts an immutable JSONL trade journal + daily snapshots
+- Provider auto-detect with Yahoo fallback; SQLite cache (18h prices / 7d info)
+- `core/` is Streamlit-free — all metrics are pure Polars-DataFrame functions
+- Sharpe inference suite (DSR, PSR, MinTRL, FDR/FWER) following Bailey & López de Prado
 
-| Provider | Status | Requirements | Data |
-|----------|--------|-------------|------|
-| **Yahoo Finance** | Default | None (free) | EOD adjusted close, ~18hr delay |
-| **Bloomberg** | Optional | Terminal + `pip install blpapi` | Real-time, institutional reference data |
-| **Interactive Brokers** | Optional | TWS/Gateway + `pip install ib_insync` | Real-time quotes |
-
-Switch providers in the sidebar under **Data Source**. The system auto-detects installed packages and falls back to Yahoo Finance if a requested provider is unavailable.
-
-The provider layer uses an abstract base class with 4 methods (`fetch_daily_prices`, `fetch_ticker_info`, `fetch_current_prices`, `fetch_risk_free_rate`). Each provider is a standalone module. A SQLite caching layer sits between the provider and the app, avoiding redundant API calls (18-hour staleness for prices, 7-day for fundamentals).
-
-### Analytics
-
-| Category | Metrics |
-|----------|---------|
-| **Return** | Sharpe, Sortino, Calmar, Deflated Sharpe Ratio (DSR), Probabilistic Sharpe Ratio (PSR), Sharpe CI, Minimum Track Record Length (MinTRL) |
-| **Risk** | Portfolio vol, VaR 95%, CVaR 95%, tracking error, idiosyncratic vol, marginal contribution to risk |
-| **Drawdown** | Max DD, current DD, E[DD], P(DD≥b), time in DD (Bailey & Lopez de Prado analytical framework) |
-| **Exposure** | Gross/net, net beta, HHI concentration, top-5 concentration, L/S ratio, cash % |
-| **Factors** | CAPM, Fama-French 3-factor, Carhart 4-factor via ETF proxies |
-| **Correlation** | Avg pairwise, partial (precision matrix), long book, short book, L/S book, most/least correlated pairs |
-| **Quality** | Composite 0-100 score across 6 dimensions: risk-adjusted return, drawdown resilience, alpha quality, diversification, tail risk, exposure balance |
-| **Technical** | RSI (Wilder's, configurable 7/14/21d), ADV$ (20-day avg dollar volume) |
-| **Attribution** | Position P&L, sector P&L (long/short), side, factor decomposition (market/size/value/momentum/alpha) |
-| **PM** | Hit rate, slugging %, EV per trade, long/short breakdown, sector skill |
-
-*DSR adjusts the Sharpe ratio for non-normality and multiple testing — it answers whether a reported Sharpe ratio is statistically distinguishable from luck. PSR gives the probability that the true Sharpe exceeds a benchmark. MinTRL is the minimum number of observations needed to trust the result.*
-
-### Sidebar Controls
-
-| Control | Options | Default |
-|---------|---------|---------|
-| **Lookback** | 3M, 6M, 1Y, 2Y, 3Y | 1Y (252d) |
-| **Benchmark** | Any ticker | SPY |
-| **RSI Period** | 7, 14, 21 days | 14 |
-| **Factor Model** | CAPM, FF3, FF4 | CAPM |
-| **Risk-Free Rate** | Auto (T-bill) or manual | Auto |
-| **Data Source** | Yahoo, Bloomberg, IB | Yahoo Finance |
-| **Alert Thresholds** | Max sector net, beta bounds, gross cap | Configurable |
-| **Paper Mode** | ON / OFF | OFF |
-
----
-
-## Architecture
+## Tests
 
 ```
-ls-portfolio-lab/
-│
-├── app/                              # Streamlit application layer
-│   ├── main.py                       # Entry point — sidebar, navigation, data source selector
-│   ├── pages/                        # One module per page
-│   │   ├── portfolio_view.py         # Portfolio Dashboard
-│   │   ├── trade_simulator.py        # Trade Simulator
-│   │   ├── paper_portfolio.py        # Paper Portfolio
-│   │   └── pm_scorecard.py           # PM Scorecard
-│   ├── components/                   # Reusable UI components
-│   │   ├── metrics_panel.py          # Top metrics bar, detail grid, sector exposure chart
-│   │   ├── portfolio_table.py        # Position table — 20+ columns, filters
-│   │   └── chart_gallery.py          # 12+ Plotly charts
-│   └── state/                        # Session state & persistence
-│       ├── session.py                # Session state init — cache, settings, alerts
-│       └── persistence.py            # Portfolio save/load (JSON to disk)
-│
-├── core/                             # Pure business logic (no Streamlit imports)
-│   ├── portfolio.py                  # Pydantic models — Portfolio, Position, ProposedTrade, TradeBasket
-│   ├── mock_portfolio.py             # Mock portfolio generator (~30L/~40S, 11 GICS sectors, $3B NAV)
-│   ├── rebalancer.py                 # SLSQP constrained optimizer (net beta, vol targets)
-│   ├── trade_impact.py               # Trade simulation engine — apply trades, compute metric diffs
-│   ├── factor_model.py               # CAPM, FF3, FF4 regressions (ETF proxies)
-│   └── metrics/                      # All analytics — pure functions on Polars DataFrames
-│       ├── return_metrics.py         # Sharpe, Sortino, Calmar, DSR, PSR, Sharpe CI, MinTRL
-│       ├── sharpe_inference.py       # Full Sharpe inference: PSR, MinTRL, critical SR, power, FDR, FWER
-│       ├── risk_metrics.py           # Portfolio vol, VaR 95%, CVaR 95%, beta, idio vol, MCR
-│       ├── drawdown_analytics.py     # Bailey & Lopez de Prado — E[DD], P(DD≥b), time in DD
-│       ├── drawdown_metrics.py       # Empirical drawdown — max DD, current DD, recovery
-│       ├── exposure_metrics.py       # Gross/net exposure, net beta, HHI, top-5 concentration
-│       ├── correlation_metrics.py    # Pairwise, partial (3-asset analytic), L/S book
-│       ├── technical_metrics.py      # RSI (Wilder's), SMA, momentum, 52-week high/low
-│       ├── pm_performance.py         # Hit rate, slugging %, EV per trade, sector attribution
-│       ├── quality_score.py          # Composite 0-100 score — 6 weighted dimensions (A+ to F)
-│       └── attribution.py            # P&L attribution — position, sector, side, factor decomposition
-│
-├── data/                             # Market data providers & caching
-│   ├── provider.py                   # Abstract DataProvider base class (4 methods)
-│   ├── yahoo_provider.py             # Yahoo Finance — default, free, EOD data
-│   ├── bloomberg_provider.py         # Bloomberg Professional API (optional)
-│   ├── ib_provider.py                # Interactive Brokers (optional)
-│   ├── provider_factory.py           # Provider registry, auto-discovery, fallback
-│   ├── cache.py                      # SQLite cache — 18hr price staleness, 7d info staleness
-│   ├── universe.py                   # ~440 Russell 1000 tickers (market cap > $5B)
-│   ├── sector_map.py                 # GICS sector/subsector classification + ETF detection
-│   └── ingest.py                     # Portfolio parser — CSV, Excel
-│
-├── history/                          # Paper portfolio persistence (append-only)
-│   ├── trade_log.py                  # JSONL trade journal — immutable, timestamped records
-│   ├── snapshot.py                   # Daily snapshots — NAV, positions, sector exposures
-│   └── performance.py                # Time-weighted return, PM scorecard generation
-│
-└── tests/                            # 601 tests (pytest)
+pytest tests/ -v
+make lint
 ```
-
-### Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| **Frontend** | Streamlit |
-| **Data** | Polars (DataFrames), Pydantic v2 (models) |
-| **Charts** | Plotly |
-| **Market Data** | yfinance, blpapi, ib_insync |
-| **Optimization** | SciPy (SLSQP) |
-| **Statistics** | NumPy, SciPy |
-| **Persistence** | SQLite (cache), JSONL (trade log, snapshots) |
-| **Testing** | pytest (601 tests), pytest-cov |
-| **Linting** | Ruff |
-| **Python** | 3.12+ |
-
----
-
-## Testing
-
-```bash
-source .venv/bin/activate
-pytest tests/ -v               # Run all 601 tests
-pytest tests/ -v --cov=core    # With coverage report
-make lint                      # Ruff linting
-make fmt                       # Auto-format
-```
-
----
-
-## References
-
-- Bailey, D.H. & Lopez de Prado, M. (2014). The Deflated Sharpe Ratio: Correcting for Selection Bias, Backtest Overfitting, and Non-Normality. *Journal of Portfolio Management*, 40(5), 94-107.
-- Bailey, D.H. & Lopez de Prado, M. (2014). The Sharpe Ratio Efficient Frontier. *Algorithmic Finance*, 3(1-2), 99-109. [DOI](https://doi.org/10.3233/AF-140035)
-- Lo, A. (2002). The Statistics of Sharpe Ratios. *Financial Analysts Journal*, 58(4), 36-52.
-- Fama, E.F. & French, K.R. (1993). *Journal of Financial Economics*, 33(1), 3-56.
-- Carhart, M.M. (1997). *The Journal of Finance*, 52(1), 57-82.
-
-See [REFERENCES.md](REFERENCES.md) for full citations and implemented equations. See [CITATION.cff](CITATION.cff) for machine-readable citation metadata.
-
-## Contributing
-
-Under active development. Contributions welcome — areas for improvement include analytics/risk metrics, data provider integrations, chart types, and paper portfolio tracking.
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
-
----
-
-***Curiosity compounds. Rigor endures.***
+MIT
